@@ -1,0 +1,2105 @@
+…or create a new repository on the command line
+
+echo "# ccl" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git remote add origin git@github.com:dragon2610/ccl.git
+git push -u origin master
+…or push an existing repository from the command line
+
+git remote add origin git@github.com:dragon2610/ccl.git
+git push -u origin master
+
+
+yum -y install wget
+
+wget --no-check-certificate https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocksR.sh
+
+chmod +x shadowsocksR.sh
+
+./shadowsocksR.sh 2>&1 | tee shadowsocksR.log
+
+
+
+yum -y install wget
+
+wget --no-check-certificate https://github.com/teddysun/across/raw/master/bbr.sh
+
+chmod +x bbr.sh
+
+./bbr.sh
+
+
+1.adb shell 
+2.cd /system/etc/sensors/ 
+sensor_def_qcomdev.conf
+
+adb shell rm /persist/sensors/sns.reg 
+adb shell sync 
+@adb reboot 
+
+试试adb切换到com口 
+adb shell 
+setprop persist.sys.usb.config diag,adb
+
+1. Dlopen
+以指定模式打开指定的动态连接库文件，并返回一个句柄给调用进程，dlerror返回出现的错误，dlsym通过句柄和连接符名称获取函数名或者变量名，dlclose来卸载打开的库
+libcaculate.so
+int add(int a,int b)
+{
+    return (a + b);
+}
+
+int sub(int a, int b)
+{
+    return (a - b);
+}
+
+int mul(int a, int b)
+{
+    return (a * b);
+}
+
+int div(int a, int b)
+{
+    return (a / b);
+}
+
+#include <dlfcn.h>
+
+void *dlopen(const char *filename, int flag);
+
+char *dlerror(void);
+
+void *dlsym(void *handle, const char *symbol);
+
+int dlclose(void *handle);
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <dlfcn.h>
+
+//动态链接库路径
+#define LIB_CACULATE_PATH "./libcaculate.so"
+
+//函数指针
+typedef int (*CAC_FUNC)(int, int);
+
+int main()
+{
+    void *handle;
+    char *error;
+    CAC_FUNC cac_func = NULL;
+
+    //打开动态链接库
+    handle = dlopen(LIB_CACULATE_PATH, RTLD_LAZY); //RTLD_LAZY?暂缓决定，等有需要时再解出符号?RTLD_NOW?立即决定，返回前解除所有未决定的符号。
+    if (!handle) {
+    fprintf(stderr, "%s\n", dlerror());
+    exit(EXIT_FAILURE);
+    }
+
+    //清除之前存在的错误
+    dlerror();
+
+    //获取一个函数
+    *(void **) (&cac_func) = dlsym(handle, "add");
+    if ((error = dlerror()) != NULL)  {
+    fprintf(stderr, "%s\n", error);
+    exit(EXIT_FAILURE);
+    }
+    printf("add: %d\n", (*cac_func)(2,7));
+
+    cac_func = (CAC_FUNC)dlsym(handle, "sub");
+    printf("sub: %d\n", cac_func(9,2));
+
+    cac_func = (CAC_FUNC)dlsym(handle, "mul");
+    printf("mul: %d\n", cac_func(3,2));
+
+    cac_func = (CAC_FUNC)dlsym(handle, "div");
+    printf("div: %d\n", cac_func(8,2));
+
+    //关闭动态链接库
+    dlclose(handle);
+    exit(EXIT_SUCCESS);
+}
+
+#include <stdio.h>
+void main()
+{
+       int *p;
+       int a=2;
+       unsigned long b=1245048;
+       p=&a;
+       printf("%d/n",*p);
+       printf("%p/n",&a);
+       printf("%d/n",&a);
+       printf("%d/n",(void*)b);
+       //printf("%d/n",*(void*)b);  // 被注释的一行，运行此行会提示错误。
+       printf("%d/n",*(int*)b);
+       printf("%d/n",*(void**)b);
+}    
+ 
+P 为指向整型变量的指针。将 a 的地址赋予 p ，打印出 *p （解引用，即取该地址的值）为 2 。
+再打印出 &a ，即 a 地址，为 0012FF78 （参数 p 表示用指针的格式，即内存地址，打印出来）。
+再打印出 &a 的地址的十进制数字为 1245048( 参数 d 表示为十进制 ) 。
+定义一个整型变量 b ，赋值为 1245048 ( 即 unsigned long b=1245048;) 。
+如此， printf("%d/n",(void*)b); 表示：将 b 强制转换为一个指针，并打印出来。结果是 1245048 。
+为什么如此呢？因为此时 b 虽然转换为一个指针，但 printf 的时候却没加上 * 号，故此没进行解引用（也即是取该地址的值），因而打印出来的仍然是该指针的值。（注意区别指针的值，和该指针指向的地址的值）
+那么，加上 * 号进行解引用再打印出来，可否？实验结果不行，出现语法错误。概因 b 只是强制转换为指针，并没有指明是什么样类型（其实是 void 型）的指针。
+那么，强制转换的时候便声明该指针类型，可以吗？可以看看 printf("%d/n",*(int*)b); ，将 b 强制转换为 int* 类型的指针，解引用成功，输出 2 。
+最后来到我们的问题， *(void**)b 究竟是什么？相信看到这里你大概知道了。
+(void**) 代表的是指向指针的指针，如此，先 (void**)b ，即，将 b 强制转换为指向指针的指针，然后再给它加上一个 * 解引用，如此，便取得了该指针指向的地址的值， 2 。
+你可能会说，这里不也是声明为 void 型的指针了吗？这里行为什么上边不行呢？不，这里其实是不一样的。上边是void 型指针，本质即指针，而这里是 void 型的指针的指针，本质是指针的指针。 void 型指针，不知道指向的地址内容要怎么去引用它，而 void 型的指针的指针，却知道其指向的地址内容是一个地址。
+当然，我们也可以 printf("%d/n",*(int**)b); 输出结果是一样的。因为指向指针的指针本来就是指针（恩，有点拗口），只要类型正确，决定该指针输出什么的是其指向哪里的值，而不是指针本身。
+我们可以做个试验， printf("%d/n",*(int****)b); ，看起来很晕吧，将 b 转换为指向指针的指针的指针的指针，结果呢？一样都是 2 。
+
+
+2、信号量（semaphore）
+又称为信号灯，本质上，信号量是一个计数器，用来记录对某个共享资源的存取情况，一般共享资源通过以下步骤
+（1） 测试控制该资源的信号量（n）。
+（2） 若此信号量的值为正，则允许进行使用该资源。进程将信号量减1。
+（3） 若此信号量为0，则该资源目前不可用，进程进入睡眠状态，直至信号量值大于0，进程被唤醒，转入步骤（1）。
+（4） 当进程不再使用一个信号量控制的资源时，信号量值加1。如果此时有进程正在睡眠等待此信号量，则唤醒此进程。
+以一个停车场的运作为例。简单起见，假设停车场只有三个车位，一开始三个车位都是空的。这时如果同时来了五辆车，看门人允许其中三辆直接进入，然后放下车拦，剩下的车则必须在入口等待，此后来的车也都不得不在入口处等待。这时，有一辆车离开停车场，看门人得知后，打开车拦，放入外面的一辆进去，如果又离开两辆，则又可以放入两辆，如此往复。在这个停车场系统中，车位是公共资源，每辆车好比一个线程，看门人起的就是信号量的作用。
+
+
+3、互斥体（mutex）
+因此，在任意时刻，只有一个线程被允许进入这样的代码保护区。任何线程在进入临界区之前，必须获取（acquire）与此区域相关联的互斥体的所有权。如果已有另一线程拥有了临界区的互斥体，其他线程就不能再进入其中。这些线程必须等待，直到当前的属主线程释放（release）该互斥体。从原理上讲，mutex实际上是count=1情况下的semaphore
+
+
+4、自旋锁（spin_lock）
+保护共享资源的一种锁机制，解决资源的互斥使用，任意时刻只能有一个执行单元获得锁，这个互斥锁很像，但是在互斥锁中如果一个资源被占用资源申请者只能进入睡眠，但是自旋锁不会引起调用者的睡眠，而是一直在循环等待锁的保持者退出。
+通常自旋锁适用于保持锁比较短的情形，正是由于自旋锁使用者时间很短因而”自旋“比睡眠更有优势，但是如果被保护的共享资源需要在中断上下文访问（包括底半部即中断处理句柄和顶半部即软中断），就必须使用自旋锁。自旋锁保持期间是抢占失效的，而信号量和读写信号量保持期间是可以被抢占的。，并且自旋锁不可递归调用
+区别
+信号量/互斥体允许进程睡眠属于睡眠锁，自旋锁则不允许调用者睡眠，而是让其循环等待，所以有以下区别应用
+1）、信号量和读写信号量适合于保持时间较长的情况，它们会导致调用者睡眠，因而自旋锁适合于保持时间非常短的情况
+2）、自旋锁可以用于中断，不能用于进程上下文(会引起死锁)。而信号量不允许使用在中断中，而可以用于进程上下文
+3）、自旋锁保持期间是抢占失效的，自旋锁被持有时，内核不能被抢占，而信号量和读写信号量保持期间是可以被抢占的
+
+
+5. HALL MR
+   Anisotropic Magneto-Resistive (AMR)
+   磁阻效應(Magneto resistance Effect, MR)
+   giant magneto-impedance GMI
+   
+   
+6. git
+rm -rf ~/.ssh/
+ssh-keygen.exe -t rsa
+cat ~/.ssh/id_rsa.pub
+…or create a new repository on the command line
+echo "# ST" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git remote add origin git@github.com:dragon26100/ST.git
+git push -u origin master
+…or push an existing repository from the command line
+git remote add origin git@github.com:dragon26100/ST.git
+git push -u origin master
+…or import code from another repository
+You can initialize this repository with code from a Subversion, Mercurial, or TFS project.
+
+   执行如下命令以创建一个本地仓库的克隆版本：
+git clone /path/to/repository?
+如果是远端服务器上的仓库，你的命令会是这个样子：
+git clone username@host:/path/to/repository
+   你可以提出更改（把它们添加到暂存区），使用如下命令：
+git add <filename>
+git add *
+git add .
+这是 git 基本工作流程的第一步；使用如下命令以实际提交改动：
+git commit -m "代码提交信息"
+现在，你的改动已经提交到了?HEAD，但是还没到你的远端仓库。
+
+git commit --amend
+
+git status
+git log
+git reset --hard 19acc6d456a999d31356e34033bea28c0da3965b
+
+   你的改动现在已经在本地仓库的?HEAD?中了。执行如下命令以将这些改动提交到远端仓库：
+git push origin master
+git push origin HEAD:refs/for/master
+
+可以把?master?换成你想要推送的任何分支。?
+如果你还没有克隆现有仓库，并欲将你的仓库连接到某个远程服务器，你可以使用如下命令添加：
+git remote add origin <server>
+如此你就能够将你的改动推送到所添加的服务器上去了。
+   
+   创建一个叫做“feature_x”的分支，并切换过去：
+git checkout -b feature_x
+切换回主分支：
+git checkout master
+再把新建的分支删掉：
+git branch -d feature_x
+除非你将分支推送到远端仓库，不然该分支就是?不为他人所见的：
+git push origin <branch>
+   
+   要更新你的本地仓库至最新改动，执行：
+git pull
+以在你的工作目录中?获取（fetch）?并?合并（merge）?远端的改动。
+要合并其他分支到你的当前分支（例如 master），执行：
+git merge <branch>
+在这两种情况下，git 都会尝试去自动合并改动。遗憾的是，这可能并非每次都成功，并可能出现冲突（conflicts）。 这时候就需要你修改这些文件来手动合并这些冲突（conflicts）。改完之后，你需要执行如下命令以将它们标记为合并成功：
+git add <filename>
+在合并改动之前，你可以使用如下命令预览差异：
+git diff <source_branch> <target_branch>
+   
+   为软件发布创建标签是推荐的。这个概念早已存在，在 SVN 中也有。你可以执行如下命令创建一个叫做?1.0.0?的标签：
+git tag 1.0.0 1b2e1d63ff
+1b2e1d63ff?是你想要标记的提交 ID 的前 10 位字符。可以使用下列命令获取提交 ID：
+git log
+你也可以使用少一点的提交 ID 前几位，只要它的指向具有唯一性。
+   
+假如你操作失误（当然，这最好永远不要发生），你可以使用如下命令替换掉本地改动：
+git checkout -- <filename>
+此命令会使用 HEAD 中的最新内容替换掉你的工作目录中的文件。已添加到暂存区的改动以及新文件都不会受到影响。
+假如你想丢弃你在本地的所有改动与提交，可以到服务器上获取最新的版本历史，并将你本地主分支指向它：
+git fetch origin
+git reset --hard origin/master
+
+
+7. wifi adb
+setprop service.adb.tcp.port 5555
+start adbd
+adb connect 192.168.1.1:5555
+
+
+
+8. list_add
+对链表的插入操作有两种：在表头插入和在表尾插入。Linux为此提供了两个接口：
+static inline void list_add(struct list_head *new, struct list_head *head);
+static inline void list_add_tail(struct list_head *new, struct list_head *head);
+因为Linux链表是循环表，且表头的next、prev分别指向链表中的第一个和最末一个节点，所以，list_add和list_add_tail的区别并不大，实际上，Linux分别用
+__list_add(new, head, head->next);
+和
+__list_add(new, head->prev, head);
+来实现两个接口，可见，在表头插入是插入在head之后，而在表尾插入是插入在head->prev之后。
+static __inline__ void __list_add(struct list_head * _new, struct list_head * prev, struct list_head * next)
+{
+	next->prev = _new;
+	_new->next = next;
+	_new->prev = prev;
+	prev->next = _new;
+}
+   
+   
+9. Linux内存管理
+　　进程对应的内存空间中所包含的5种不同的数据区
+　　代码段：代码段是用来存放可执行文件的操作指令，也就是说是它是可执行程序在内存中的镜像。代码段需要防止在运行时被非法修改，所以只准许读取操作，而不允许写入（修改）操作——它是不可写的。
+　　数据段：数据段用来存放可执行文件中已初始化全局变量，换句话说就是存放程序静态分配[1]的变量和全局变量。
+　　BSS段[2]：BSS段包含了程序中未初始化的全局变量，在内存中?bss段全部置零。
+　　堆（heap）：堆是用于存放进程运行中被动态分配的内存段，它的大小并不固定，可动态扩张或缩减。当进程调用malloc等函数分配内存时，新分配的内存就被动态添加到堆上（堆被扩张）；当利用free等函数释放内存时，被释放的内存从堆中被剔除（堆被缩减）
+　　栈：栈是用户存放程序临时创建的局部变量，也就是说我们函数括弧“{}”中定义的变量（但不包括static声明的变量，static意味着在数据段中存放变量）。除此以外，在函数被调用时，其参数也会被压入发起调用的进程栈中，并且待到调用结束后，函数的返回值也会被存放回栈中。由于栈的先进先出特点，所以栈特别方便用来保存/恢复调用现场。从这个意义上讲，我们可以把堆栈看成一个寄存、交换临时数据的内存区。
+　　
+　　在Linux内核中对应进程内存区域的数据结构是:?vm_area_struct,?内核将每个内存区域作为一个单独的内存对象管理，相应的操作也都一致。采用面向对象方法使VMA结构体可以代表多种类型的内存区域－－比如内存映射文件或进程的用户空间栈等，对这些区域的操作也都不尽相同。
+　　vm_area_strcut结构比较复杂，关于它的详细结构请参阅相关资料。我们这里只对它的组织方法做一点补充说明。vm_area_struct是描述进程地址空间的基本管理单元，对于一个进程来说往往需要多个内存区域来描述它的虚拟空间，如何关联这些不同的内存区域呢？大家可能都会想到使用链表，的确vm_area_struct结构确实是以链表形式链接，不过为了方便查找，内核又以红黑树（以前的内核使用平衡树）的形式组织内存区域，以便降低搜索耗时。并存的两种组织形式，并非冗余：链表用于需要遍历全部节点的时候用，而红黑树适用于在地址空间中定位特定内存区域的时候。内核为了内存区域上的各种不同操作都能获得高性能，所以同时使用了这两种数据结构。
+　　创建进程fork()、程序载入execve()、映射文件mmap()、动态内存分配malloc()/brk()等进程相关操作都需要分配内存给进程。不过这时进程申请和获得的还不是实际内存，而是虚拟内存，准确的说是“内存区域”。进程对内存区域的分配最终都会归结到do_mmap（）函数上来（brk调用被单独以系统调用实现，不用do_mmap()），
+　　内核使用do_mmap()函数创建一个新的线性地址区间。但是说该函数创建了一个新VMA并不非常准确，因为如果创建的地址区间和一个已经存在的地址区间相邻，并且它们具有相同的访问权限的话，那么两个区间将合并为一个。如果不能合并，那么就确实需要创建一个新的VMA了。但无论哪种情况，?do_mmap()函数都会将一个地址区间加入到进程的地址空间中－－无论是扩展已存在的内存区域还是创建一个新的区域。
+　　同样，释放一个内存区域应使用函数do_ummap()，它会销毁对应的内存区域。
+   注意：get_free_page是在内核中分配内存，不同于malloc在用户空间中分配，malloc利用堆动态分配，实际上是调用brk()系统调用，该调用的作用是扩大或缩小进程堆空间（它会修改进程的brk域）。如果现有的内存区域不够容纳堆空间，则会以页面大小的倍数为单位，扩张或收缩对应的内存区域，但brk值并非以页面大小为倍数修改，而是按实际请求修改。因此Malloc在用户空间分配内存可以以字节为单位分配,但内核在内部仍然会是以页为单位分配的。
+   Slab并非是脱离伙伴关系而独立存在的一种内存分配方式，slab仍然是建立在页面基础之上，换句话说，Slab将页面（来自于伙伴关系管理的空闲页面链表）撕碎成众多小内存块以供分配，slab中的对象分配和销毁使用kmem_cache_alloc与kmem_cache_free。
+　　内核提供vmalloc函数分配内核虚拟内存，该函数不同于kmalloc，它可以分配较Kmalloc大得多的内存空间（可远大于128K，但必须是页大小的倍数），但相比Kmalloc来说,Vmalloc需要对内核虚拟地址进行重映射，必须更新内核页表，因此分配效率上要低一些（用空间换时间）
+　　与用户进程相似,内核也有一个名为init_mm的mm_strcut结构来描述内核地址空间，其中页表项pdg=swapper_pg_dir包含了系统内核空间（3G-4G）的映射关系。因此vmalloc分配内核虚拟地址必须更新内核页表，而kmalloc或get_free_page由于分配的连续内存，所以不需要更新内核页表。
+   虚拟地址范围对应CPU的寻址能力，32位的CPU的虚拟地址范围为 0x00000000 ~ 0xFFFFFFFF，即最大虚拟内存为2^32 Bytes = 4GB；相应的64位CPU最大虚拟内存为 2^64 Bytes，然而实际上目前大部分操作系统和应用程序都不需要这样大的虚拟地址空间，并且64位长的地址会增加系统的复杂性和地址转换成本，因此目前的x86-64架构只使用虚拟地址低位48位（0 ～ 47）作为虚拟地址，并用第47位的值填充48 ～ 63高位，因此64位CPU的最大虚拟内存为2^48 = 256TB。一般地，物理地址空间只是虚拟地址空间的一个子集。
+   
+   
+10. Linux调度
+Linux的调度基于分时技术（time-sharing）：多个进程以“时间多路复用”方式运行，因 为CPU的时间被分成“片”，给每个可运行进程分配一片（注1）。当然，单处理器在任何给 定的时刻只能运行一个进程。如果当前运行进程的时间片或时限（quantum）到期时，该进程 还没有运行完毕，进程切换就可以发生。分时依赖于定时中断，因此，对进程是透明的。不需 要在程序中插入额外的代码来保证CPU分时。
+
+首先被中断不是被抢占，中断和抢占是两个概念。抢占必须涉及进程上下文的切换，而中断是在中断上下文。
+所谓可抢占抢的是进程上下文，人人都争取上台。可中断指的是是否可以中断当前CPU而进入我的中断处理函数。
+如果内核是不可抢占的（比如说2.4的内核），一旦切进内核态，只要代码不是主动释放CPU它就可以一直占着CPU。例外，虽不可抢占，但若此时发生中断，代码还是要交出CPU，但是中断返回之后，代码又能霸占CPU了，此为可中断但不可抢占。
+如果内核是可抢占的（比如2.6或之后的内核），上述情况就不会发生了。内核抢占发生在以下3种情况：
+1. 从中断返回内核态时，若此时可抢占，则会强制调用schedule（），尝试抢占，被中断的内核代码不一定能继续霸着CPU。
+2.内核变成可抢占状态，此时也会尝试抢占。
+3.内核代码主动调用schedule（）。
+虽然2.6的内核提供内核抢占，但是也提供关闭的手段。是否可抢占是由preemt_count变量控制（per-cpu），有锁这个计数就+1，释放锁就-1.为0才是可抢占。每当释放锁的时候都会检查是否为0，为0则尝试抢占。
++++++++++++++++++++分割线++++++++++++++++++++++++++++++++
+关于中断
+中断分为上下两个部分。是为中断上半部（top half）、下半部（bottom half）。
+上半部处理紧要事情。比如：通知硬件“我知道你请求中断了，继续干活去”，然后从设备缓冲区拷贝数据到内存。
+下半部处理不那么要紧的任务。比如：网卡上来的数据推进协议栈，然后推给上层应用程序。
+当前的内核有三种下半部的实现方式：softirq、tasklet、working queue。
+
+Softirq  中断上下文  可中断不可睡眠   速度最快。同一个Softirq可能会同时运行在多个核上，必须非常小心的处理数据同步
+Tasklet  中断上下文  可中断不可睡眠   基于Softirq实现，同一类的Tasklet不会被同时运行，编程代价小
+Work queue  进程上下文  可中断可睡眠  基于内核线程实现
+
+　　Linux是多任务抢占操作系统，多任务就是指多个进程间通过分时切换来并发执行。非抢占的系统是对每个进程而言，除非时间片用完或主动放弃否则不会被剥夺CPU,主动放弃包括调用一些调度的系统调用(比如sched_yield)或者调用IO等阻塞操作。抢占式系统表示即使当前进程没有用完时间片，也没有主动放弃CPU,如果调度系统发现有更高动态优先级的进程，则强制剥夺当前进程的CPU,选择更高动态优先级的进程执行。
+　　调度系统什么时候查看是否有更高优先级的进程呢？有这些情况：①时钟中断处理程序(Linux2.6的系统时钟频率默认是1000HZ,即每1ms调用一次时钟中断处理程序，具体系统配置的时钟频率可以通过cat/boot/config-*|grep"^CONFIG_HZ="来获取)。如果是多核处理器，则每个CPU都会执行时钟中断处理程序(其他中断处理程序只会映射到某个CPU上执行);②其他一些中断处理程序，会让某个CPU执行调度程序;③当前进程阻塞、睡眠等主动放弃处理器;④当前进程用完时间片;⑤创建了新进程;⑥执行一些调度相关的系统调用，比如改变进程的静态优先级等。
+　　内核2.6的进程调度策略一共有三种：SCHED_NORMAL,SCHED_FIFO和SCHED_RR.其中SCHED_NORMAL用于普通进程的调度，后两种用于实时进程的调度。
+　　Linux的进程有的属于IO消耗型进程，有的属于处理器消耗型进程。IO消耗型进程希望获得更多的处理器响应机会，每次响应不需要很长时间;处理器消耗型进程则相反。调度程序通常在系统响应速度和最大系统吞吐量之间寻求平衡。
+　　Linux进程的静态优先级。静态优先级分为两个范围：0~99是实时进程的静态优先级(值越大优先级越高)，100~139是普通进程的静态优先级(通过nice值表示，-20~19,值越大优先级越低)。
+　　首先介绍普通进程的调度策略。Linux采用称为完全公平调度算法的调度策略(CFS)，每个CPU都有个可运行队列，多个处理器的可运行队列会在调度时进行队列的平衡处理。对某个处理器而言，应该选取哪个进程投入执行是调度的核心问题，CFS根据当前可运行队列中普通进程的静态优先级给每个进程分配处理器使用比，确定周期时间T(T的选取和可运行进程个数相关，默认是20ms,这个时间T是用来控制进程切换频率的，如果太小会导致进程很快完成当前分配的处理比，而重新分配处理比，重新调度)。调度时计算虚拟运行时间，这个时间很关键，因为调度系统就是选择最小虚拟运行时间的进程投入执行。
+　　虚拟运行时间是指每个进程的实际运行时间标准化后的时间，这个时间是相对的，可以理解为实际时间处理处理器使用比。调度思想是这样的，每个进程已经分配好处理器使用比了，调度系统希望各个进程差不多同时用完这个使用比，而不是有的进程很早完成，有的进程很晚完成。那么各个进程的完成的程度就是调度的依据，总是选择完成比最小的进程投入运行。
+　　如果一个进程阻塞了，其他进程运行了一段时间，显然这个阻塞进程的完成比最小，那么当它醒过来的时候，会导致很长一段时间都只运行这个进程，所以在唤醒时会将完成比调整为当前可运行队列中完成比的最小值。新建的进程会根据优先级计算一个完成比，而不是简单的完成比赋为0.
+　　再介绍实时进程的调度。SCHED_FIFO策略很简单，就是选取最高静态优先级的实时进程投入运行，并且直到进程运行完成或被更高优先级的实时进程抢占。SCHED_RR是带时间片的SCHED_FIFO.内核不为实时进程计算动态优先级。
+　　
+* 进程 是计算机系统中，程序运行的实体，也是线程的容器。
+* 线程 是进程中实际执行单位，一个线程是程序执行流的最小单元。在一个进程中可以有多个线程存在。
+　　nice与进程调度
+　　Linux中，使用nice value（以下成为nice值）来设定一个进程的优先级，系统任务调度器根据nice值合理安排调度。
+* nice的取值范围为-20到19。
+* 通常情况下，nice的默认值为0。视具体操作系统而定。
+* nice的值越大，进程的优先级就越低，获得CPU调用的机会越少，nice值越小，进程的优先级则越高，获得CPU调用的机会越多。
+* 一个nice值为-20的进程优先级最高，nice值为19的进程优先级最低。
+* 父进程fork出来的子进程nice值与父进程相同。父进程renice，子进程nice值不会随之改变。
+　　renice
+　　对于一个新的进程我们可以按照下面的代码为一个进程设定nice值。
+1. nice?-n?10?adb?logcat??
+　　对于已经创建的进程，我们可以使用renice来修改nice值
+1. sudo?renice?-n?0?-p?24161??
+　　该命令需要使用root权限，-p对应的值为进程id。
+　　注意renice命令在Linux发行版中-n 的值应该为进程的目标优先级。而Mac下-n，则是代表对当前权限的增加值。 比如在Mac下，讲一个进程的nice值由19改成10，可以这样操作sudo renice -n -9 -p 24161,这一点需要注意，避免掉进坑里。
+　　Android中的nice
+　　由于Android基于Linux Kernel，在Android中也存在nice值。但是一般情况下我们无法控制，原因如下：
+* Android系统并不像其他Linux发行版那样便捷地使用nice命令操作。
+* renice需要root权限，一般应用无法实现。
+　　线程调度
+　　虽然对于进程的优先级，我们无法控制，但是我们可以控制进程中的线程的优先级。在Android中有两种线程的优先级，一种为Android API版本，另一种是 Java 原生版本。
+　　Android API
+　　Android中的线程优先级别目前规定了如下，了解了进程优先级与nice值的关系，那么线程优先级与值之间的关系也就更加容易理解。
+* THREAD_PRIORITY_DEFAULT，默认的线程优先级，值为0。
+* THREAD_PRIORITY_LOWEST，最低的线程级别，值为19。
+* THREAD_PRIORITY_BACKGROUND 后台线程建议设置这个优先级，值为10。
+* THREAD_PRIORITY_FOREGROUND 用户正在交互的UI线程，代码中无法设置该优先级，系统会按照情况调整到该优先级，值为-2。
+* THREAD_PRIORITY_DISPLAY 也是与UI交互相关的优先级界别，但是要比THREAD_PRIORITY_FOREGROUND优先，代码中无法设置，由系统按照情况调整，值为-4。
+* THREAD_PRIORITY_URGENT_DISPLAY 显示线程的最高级别，用来处理绘制画面和检索输入事件，代码中无法设置成该优先级。值为-8。
+* THREAD_PRIORITY_AUDIO 声音线程的标准级别，代码中无法设置为该优先级，值为 -16。
+* THREAD_PRIORITY_URGENT_AUDIO 声音线程的最高级别，优先程度较THREAD_PRIORITY_AUDIO要高。代码中无法设置为该优先级。值为-19。
+* THREAD_PRIORITY_MORE_FAVORABLE 相对THREAD_PRIORITY_DEFAULT稍微优先，值为-1。
+* THREAD_PRIORITY_LESS_FAVORABLE 相对THREAD_PRIORITY_DEFAULT稍微落后一些，值为1。
+　　使用Android API为线程设置优先级也很简单，只需要在线程执行时调用android.os.Process.setThreadPriority方法即可。这种在线程运行时进行修改优先级，效果类似renice。
+	new Thread () { 
+	    @Override 
+	    public void run() { 
+	      super.run(); 
+	        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND); 
+	    } 
+	}.start(); 
+
+　　Java原生API
+　　Java为Thread提供了三个级别的设置，
+* MAX_PRIORITY，相当于android.os.Process.THREAD_PRIORITY_URGENT_DISPLAY，值为10。
+* MIN_PRIORITY，相当于android.os.Process.THREAD_PRIORITY_LOWEST，值为0。
+* NORM_PRIORITY，相当于android.os.Process.THREAD_PRIORITY_DEFAULT，值为5。
+　　使用setPriority我们可以为某个线程设置优先级，使用getPriority可以获得某个线程的优先级。
+　　在Android系统中，不建议使用Java原生的API，因为Android提供的API划分的级别更多，更适合在Android系统中进行设定细致的优先级。
+　　注意
+　　Android API的线程优先级和Java原生API的优先级是相对独立的，比如使用 android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND) 后，使用Java原生API,Thread.getPriority()得到的值不会改变。如下面代码：
+	new Thread() { 
+	    @Override 
+	    public void run() { 
+	        super.run(); 
+	        Log.i(LOGTAG, "Java Thread Priority Before=" + Thread.currentThread().getPriority()); 
+	        Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST); 
+	        Log.i(LOGTAG, "Java Thread Priority=" + Thread.currentThread().getPriority()); 
+	    } 
+	}.start();
+
+　　上述代码的运行日志为
+1.	I/MainActivity( 3679): Java Thread Priority Before=5  I/MainActivity( 3679): Java Thread Priority=5  
+　　由于上面的这一点缺陷，导致我们在分析ANR trace时需要注意，在下面的ANR日志信息中，prio=5中proi的值对应的Java原生API的线程优先级。而nice=-6中的nice表示的Android API版本的线程优先级。
+	"main" prio=5 tid=1 NATIVE 
+	  | group="main" sCount=1 dsCount=0 obj=0x41690f18 self=0x4167e650 
+	  | sysTid=1765 nice=-6 sched=0/0 cgrp=apps handle=1074196888 
+	  | state=S schedstat=( 0 0 0 ) utm=5764 stm=3654 core=2 
+	  #00  pc 00022624  /system/lib/libc.so (__futex_syscall3+8) 
+	  #01  pc 0000f054  /system/lib/libc.so (__pthread_cond_timedwait_relative+48) 
+	  #02  pc 0000f0b4  /system/lib/libc.so (__pthread_cond_timedwait+64) 
+
+　　避免ANR
+　　我在之前的文章说说Android中的ANR中提到使用WorkerThread处理耗时IO操作，同时将WorkerThread的优先级降低，对于耗时IO操作，比如读取数据库，文件等，我们可以设置该workerThread优先级为THREAD_PRIORITY_BACKGROUND，以此降低与主线程竞争的能力。
+
+
+11. kzalloc
+	/** 
+	 * kzalloc - allocate memory. The memory is set to zero. 
+	 * @size: how many bytes of memory are required. 
+	 * @flags: the type of memory to allocate (see kmalloc). 
+	 */  
+	static inline void *kzalloc(size_t size, gfp_t flags)  
+	{  
+	        return kmalloc(size, flags | __GFP_ZERO);  
+	}  
+
+kzalloc实现了kmalloc以及memset的功能，一个函数起到了两个函数的作用
+
+
+12. linux下devicetree中惯用的of函数
+从device_node中获取信息：
+int of_property_read_u8_array(const struct device_node *np, const char *propname,u8 *out_values, size_t sz);
+int of_property_read_u16_array(const struct device_node *np, const char *propname,u16 *out_values, size_t sz);
+int of_property_read_u32_array(const struct device_node *np, const char *propname,u32 *out_values, size_t sz);
+从设备结点np中读取属性名为propname，类型为8、16、32、位整型数组的属性值，并放入out_values，sz指明了要读取的个数。
+
+static inline int of_property_read_u8(const struct device_node *np,const char *propname,u8 *out_value) 
+static inline int of_property_read_u16(const struct device_node *np,const char *propname,u8 *out_value) 
+static inline int of_property_read_u32(const struct device_node *np,const char *propname,u8 *out_value) 
+
+从设备结点np中读取属性名为propname，类型为8、16、32位的属性值，并放入out_values。实际上这里调用的就是sz为1的XXX_array函数。
+
+int of_property_read_u32_index(const struct device_node *np,const char*propname,u32 index, u32 *out_value)
+从设备结点np中读取属性名为propname的属性值中第index个u32数值给out_value
+
+int of_property_read_u64(conststruct device_node *np, const char *propname,u64 *out_value)
+从设备结点np中读取属性名为propname，类型为64位的属性值，并放入out_values
+
+int of_property_read_string(struct device_node *np, const char *propname,const char**out_string)
+从设备结点np中读取属性名为propname的字符串型属性值
+
+int of_property_read_string_index(struct device_node *np, const char *propname,intindex, const char **output)
+从设备结点np中读取属性名为propname的字符串型属性值数组中的第index个字符串
+
+int of_property_count_strings(struct device_node *np, const char *propname)
+从设备结点np中读取属性名为propname的字符串型属性值的个数
+
+unsigned int irq_of_parse_and_map(struct device_node *dev, int index)
+从设备节点dev中读取第index个irq号
+
+int of_irq_to_resource(struct device_node *dev, int index, struct resource *r)
+从设备节点dev中读取第index个irq号，并填充一个irq资源结构体
+
+int of_irq_count(struct device_node *dev)
+获取设备节点dev的irq个数
+
+static inline bool of_property_read_bool(const struct device_node *np,const char *propname);
+如果设备结点np含有propname属性，则返回true，否则返回false。一般用于检查空属性是否存在。
+
+struct property* of_find_property(const struct device_node *np,const char *name,int *lenp)
+根据name参数，在指定的设备结点np中查找匹配的property，并返回这个property
+
+const void * of_get_property(const struct device_node *np, const char *name,int *lenp)
+根据name参数，在指定的设备结点np中查找匹配的property，并返回这个property的属性值
+
+struct device_node* of_get_parent(const struct device_node *node)
+获得node节点的父节点的device node
+
+int of_device_is_compatible(const struct device_node *device,const char *compat);
+判断设备结点device的compatible属性是否包含compat指定的字符串
+
+从of_allnodes中查找信息：
+struct device_node* of_find_node_by_path(const char *path)
+根据路径参数，在全局链表of_allnodes中，查找匹配的device_node
+
+struct device_node* of_find_node_by_name(struct device_node *from,const char *name)
+则根据name在全局链表of_allnodes中查找匹配的device_node,若from=NULL表示从头开始查找
+
+struct device_node* of_find_node_by_type(struct device_node *from,const char *type)
+根据设备类型在全局链表of_allnodes中查找匹配的device_node
+
+struct device_node * of_find_compatible_node(struct device_node *from, const char*type, const char，*compatible);
+根据compatible的属性值在全局链表of_allnodes中查找匹配的device_node，大多数情况下，from、type为NULL。
+
+struct device_node* of_find_node_with_property(struct device_node *from,const char *prop_name)
+根据节点属性的name在全局链表of_allnodes中查找匹配的device_node
+
+struct device_node* of_find_node_by_phandle(phandle handle)
+根据phandle在全局链表of_allnodes中查找匹配的device_node
+
+杂：
+void __iomem* of_iomap(struct device_node *node, int index);
+通过设备结点直接进行设备内存区间的 ioremap()，index是内存段的索引。若设备结点的reg属性有多段，可通过index标示要ioremap的是哪一段，只有1段的情况，index为0
+
+unsigned long __init of_get_flat_dt_root(void)
+用来查找在dtb中的根节点，好像返回的都是0
+
+int of_alias_get_id(struct device_node *np, const char *stem)
+获取节点np对应的aliasid号
+
+struct device_node* of_node_get(struct device_node *node)
+void?of_node_put(struct device_node *node)
+device node计数增加/减少
+
+const struct of_device_id* of_match_node(const struct of_device_id *matches,const struct device_node*node)
+将matches数组中of_device_id结构的name和type与device node的compatible和type匹配，返回匹配度最高的of_device_id结构
+
+platform_device和resource相关：
+int of_address_to_resource(struct device_node *dev, int index,struct resource *r)
+根据设备节点dev的reg属性值，填充资源结构体r。Index参数指明了使用reg属性中第几个属性值，一般设置为0，表示第一个。
+
+struct platform_device* of_device_alloc(struct device_node *np,const char *bus_id,struct device *parent)
+根据device node，bus_id以及父节点创建该设备的platform_device结构，同时会初始化它的resource成员。
+
+int of_platform_bus_probe(struct device_node *root,const struct of_device_id *matches,struct device *parent)
+遍历of_allnodes中的节点挂接到of_platform_bus_type总线上,由于此时of_platform_bus_type总线上还没有驱动,所以此时不进行匹配
+
+int of_platform_populate(struct device_node *root,const struct of_device_id *matches,const struct of_dev_auxdata *lookup,struct device *parent)
+遍历of_allnodes中的所有节点，生成并初始化所以节点的platform_device结构
+
+struct platform_device* of_find_device_by_node(struct device_node *np)
+根据device_node查找返回该设备对应的platform_device结构
+
+
+13. workqueue
+
+alloc_workqueue(name, flags, max_active)
+
+alloc_ordered_workqueue(const char *name, unsigned int flags)
+{
+	return alloc_workqueue(name, WQ_UNBOUND | flags, 1);
+}
+
+当向一个工作队列提交一个工作时，它并不是在指定的线程里运行，系统会维护一个Worker Pool, ?每个Worker跑在一个单独的线程里，每一个CPU都有一个Worker Pool. ?当有work需要处理时，就唤醒一个Worker，这样就减少了系统资源的占用(原先的实现是每创建一个工作队列，系统就创建一个线程，由于每个线程都需要有task_struct, pid等资源， 这样当系统中工作队列一多的话，资源占用率就很高了). ?由于内核空间是所有进程共享的一块地址空间，因此在不同进程向工作队列提交的工作时，用户其实不用关心我这个工作到底是在哪个进程中处理的，但是这样的话，如果两个工作需要同步的话（比如访问一个共享的资源时），就得仔细考虑了，两个工作向同一个工作队列提交时，可能会被同时执行(分别跑在不同的CPU上)， 这样RACE就产生了， 为了解决这个问题， 引入了WQ_UNBOUND标志 和 max_acitve = 1， 这两个参数指明了向这个工作队列提交一个工作时，这个工作不会绑定在特定的CPU上（如果没有指明WQ_UNBOUND 标志的话，在哪个CPU上提交的工作一定会在那个CPU上执行）， max_active指明了这个工作队列后台有多少个worker线程与之绑定，默认参数为0,让系统来指定后台线程数。
+Flag：
+        指明工作队列的属性，可以设定的标记如下：
+        WQ_NON_REENTRANT：     默认情况下，工作队列只是确保在同一 CPU 上不可重入，即工作项不能在同一 CPU 上被多个工作者线程并发执行，但容许在多个 CPU 上并发执行。但该标志标明在多个 CPU 上也是不可重入的，工作项将在一个不可重入工作队列中排队，并确保至多在一个系统范围内的工作者线程被执行。
+
+        WQ_UNBOUND：   工作项被放入一个由特定 gcwq 服务的未限定工作队列，该客户工作者线程没有被限定到特定的 CPU，这样，未限定工作者队列就像简单的执行上下文一般，没有并发管理。未限定的 gcwq 试图尽可能快的执行工作项。
+        WQ_FREEZEABLE：        可冻结 wq 参与系统的暂停操作。该工作队列的工作项将被暂停，除非被唤醒，否者没有新的工作项被执行。
+        WQ_MEM_RECLAIM：       所有的工作队列可能在内存回收路径上被使用。使用该标志则保证至少有一个执行上下文而不管在任何内存压力之下。
+        WQ_HIGHPRI：           高优先级的工作项将被排练在队列头上，并且执行时不考虑并发级别；换句话说，只要资源可用，高优先级的工作项将尽可能快的执行。高优先工作项之间依据提交的顺序被执行。
+        WQ_CPU_INTENSIVE：     CPU 密集的工作项对并发级别并无贡献，换句话说，可运行的 CPU密集型工作项将不阻止其它工作项。这对于限定得工作项非常有用，因为它期望更多的 CPU 时钟周期，所以将它们的执行调度交给系统调度器。
+        WQ_DRAINING：          清空一个WQ。
+        WQ_RESCUER ：          如果Worker的内存分配失败，通过该标志位执行一个挽救操作，避免紧急任务被遗漏。
+        WQ_MAX_ACTIVE：        见max_active。
+        WQ_MAX_UNBOUND_PER_CPU:    未被使用，原解释为： 4 * #cpus for unbound wq
+        WQ_DFL_ACTIVE：        等于WQ_MAX_ACTIVE / 2,
+        PS： max_active：      决定了一个 wq 在 per-CPU 上能执行的最大工作项。比如 max_active 设置为 16 表示一个工作队列上最多 16 个工作项能同时在 per-CPU 上同时执行。当前实行中，对所有限定工作队列，max_active 的最大值是 512，而设定为 0 时表示是 256；而对于未限定工作队列，该最大值为：MAX[512，4 * num_possible_cpus() ]，除非有特别的理由需要限流或者其它原因，一般设定为 0 就可以了
+        
+		
+14. hrtimer
+1). ?如何组织hrtimer？
+我们知道，低分辨率定时器使用5个链表数组来组织timer_list结构，形成了著名的时间轮概念，对于高分辨率定时器，我们期望组织它们的数据结构至少具备以下条件：
+* 稳定而且快速的查找能力；
+* 快速地插入和删除定时器的能力；
+* 排序功能；
+内核的开发者考察了多种数据结构，例如基数树、哈希表等等，最终他们选择了红黑树（rbtree）来组织hrtimer，红黑树已经以库的形式存在于内核中，并被成功地使用在内存管理子系统和文件系统中，随着系统的运行，hrtimer不停地被创建和销毁，新的hrtimer按顺序被插入到红黑树中，树的最左边的节点就是最快到期的定时器，内核用一个hrtimer结构来表示一个高精度定时器：
+	struct hrtimer {  
+	    struct timerqueue_node      node;  
+	    ktime_t             _softexpires;  
+	    enum hrtimer_restart        (*function)(struct hrtimer *);  
+	    struct hrtimer_clock_base   *base;  
+	    unsigned long           state;  
+	        ......  
+	}; 
+
+定时器的到期时间用ktime_t来表示，_softexpires字段记录了时间，定时器一旦到期，function字段指定的回调函数会被调用，该函数的返回值为一个枚举值，它决定了该hrtimer是否需要被重新激活：
+	enum hrtimer_restart {  
+	    HRTIMER_NORESTART,  /* Timer is not restarted */  
+	    HRTIMER_RESTART,    /* Timer must be restarted */  
+	};  
+
+state字段用于表示hrtimer当前的状态，有几下几种位组合：
+	#define HRTIMER_STATE_INACTIVE  0x00  // 定时器未激活  
+	#define HRTIMER_STATE_ENQUEUED  0x01  // 定时器已经被排入红黑树中  
+	#define HRTIMER_STATE_CALLBACK  0x02  // 定时器的回调函数正在被调用  
+	#define HRTIMER_STATE_MIGRATE   0x04  // 定时器正在CPU之间做迁移  
+
+hrtimer的到期时间可以基于以下几种时间基准系统：
+	enum  hrtimer_base_type {  
+	    HRTIMER_BASE_MONOTONIC,  // 单调递增的monotonic时间，不包含休眠时间  
+	    HRTIMER_BASE_REALTIME,   // 平常使用的墙上真实时间  
+	    HRTIMER_BASE_BOOTTIME,   // 单调递增的boottime，包含休眠时间  
+	    HRTIMER_MAX_CLOCK_BASES, // 用于后续数组的定义  
+	};  
+
+和低分辨率定时器一样，处于效率和上锁的考虑，每个cpu单独管理属于自己的hrtimer，为此，专门定义了一个结构hrtimer_cpu_base：
+	struct hrtimer_cpu_base {  
+	        ......  
+	    struct hrtimer_clock_base   clock_base[HRTIMER_MAX_CLOCK_BASES];  
+	};  
+
+其中，clock_base数组为每种时间基准系统都定义了一个hrtimer_clock_base结构，它的定义如下：
+	struct hrtimer_clock_base {  
+	    struct hrtimer_cpu_base *cpu_base;  // 指向所属cpu的hrtimer_cpu_base结构  
+	        ......  
+	    struct timerqueue_head  active;     // 红黑树，包含了所有使用该时间基准系统的hrtimer  
+	    ktime_t         resolution; // 时间基准系统的分辨率  
+	    ktime_t         (*get_time)(void); // 获取该基准系统的时间函数  
+	    ktime_t         softirq_time;// 当用jiffies  
+	    ktime_t         offset;      //   
+	};  
+
+active字段是一个timerqueue_head结构，它实际上是对rbtree的进一步封装：
+	struct timerqueue_node {  
+	    struct rb_node node;  // 红黑树的节点  
+	    ktime_t expires;      // 该节点代表队hrtimer的到期时间，与hrtimer结构中的_softexpires稍有不同  
+	};  
+	  
+	struct timerqueue_head {  
+	    struct rb_root head;          // 红黑树的根节点  
+	    struct timerqueue_node *next; // 该红黑树中最早到期的节点，也就是最左下的节点  
+	};  
+
+timerqueue_head结构在红黑树的基础上，增加了一个next字段，用于保存树中最先到期的定时器节点，实际上就是树的最左下方的节点，有了next字段，当到期事件到来时，系统不必遍历整个红黑树，只要取出next字段对应的节点进行处理即可。timerqueue_node用于表示一个hrtimer节点，它在标准红黑树节点rb_node的基础上增加了expires字段，该字段和hrtimer中的_softexpires字段一起，设定了hrtimer的到期时间的一个范围，hrtimer可以在hrtimer._softexpires至timerqueue_node.expires之间的任何时刻到期，我们也称timerqueue_node.expires为硬过期时间(hard)，意思很明显：到了此时刻，定时器一定会到期，有了这个范围可以选择，定时器系统可以让范围接近的多个定时器在同一时刻同时到期，这种设计可以降低进程频繁地被hrtimer进行唤醒。经过以上的讨论，我们可以得出以下的图示，它表明了每个cpu上的hrtimer是如何被组织在一起的：
+
+
+? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?图 1.1 ?每个cpu的hrtimer组织结构
+总结一下：
+* 每个cpu有一个hrtimer_cpu_base结构；
+* hrtimer_cpu_base结构管理着3种不同的时间基准系统的hrtimer，分别是：实时时间，启动时间和单调时间；
+* 每种时间基准系统通过它的active字段（timerqueue_head结构指针），指向它们各自的红黑树；
+* 红黑树上，按到期时间进行排序，最先到期的hrtimer位于最左下的节点，并被记录在active.next字段中；
+* 3中时间基准的最先到期时间可能不同，所以，它们之中最先到期的时间被记录在hrtimer_cpu_base的expires_next字段中。
+
+2). ?hrtimer如何运转
+hrtimer的实现需要一定的硬件基础，它的实现依赖于我们前几章介绍的timekeeper和clock_event_device，如果你对timekeeper和clock_event_device不了解请参考以下文章：Linux时间子系统之三：时间的维护者：timekeeper，Linux时间子系统之四：定时器的引擎：clock_event_device。hrtimer系统需要通过timekeeper获取当前的时间，计算与到期时间的差值，并根据该差值，设定该cpu的tick_device（clock_event_device）的下一次的到期时间，时间一到，在clock_event_device的事件回调函数中处理到期的hrtimer。现在你或许有疑问：前面在介绍clock_event_device时，我们知道，每个cpu有自己的tick_device，通常用于周期性地产生进程调度和时间统计的tick事件，这里又说要用tick_device调度hrtimer系统，通常cpu只有一个tick_device，那他们如何协调工作？这个问题也一度困扰着我，如果再加上NO_HZ配置带来tickless特性，你可能会更晕。这里我们先把这个疑问放下，我将在后面的章节中来讨论这个问题，现在我们只要先知道，一旦开启了hrtimer，tick_device所关联的clock_event_device的事件回调函数会被修改为：hrtimer_interrupt，并且会被设置成工作于CLOCK_EVT_MODE_ONESHOT单触发模式。
+
+2.1 ?添加一个hrtimer
+要添加一个hrtimer，系统提供了一些api供我们使用，首先我们需要定义一个hrtimer结构的实例，然后用hrtimer_init函数对它进行初始化，它的原型如下：
+[cpp]?view plain?copy
+	void hrtimer_init(struct hrtimer *timer, clockid_t which_clock,  
+	             enum hrtimer_mode mode);  
+
+which_clock可以是CLOCK_REALTIME、CLOCK_MONOTONIC、CLOCK_BOOTTIME中的一种，mode则可以是相对时间HRTIMER_MODE_REL，也可以是绝对时间HRTIMER_MODE_ABS。设定回调函数：
+1.	timer.function = hr_callback;  
+如果定时器无需指定一个到期范围，可以在设定回调函数后直接使用hrtimer_start激活该定时器：
+	int hrtimer_start(struct hrtimer *timer, ktime_t tim,  
+	             const enum hrtimer_mode mode);  
+
+如果需要指定到期范围，则可以使用hrtimer_start_range_ns激活定时器：
+	hrtimer_start_range_ns(struct hrtimer *timer, ktime_t tim,  
+	            unsigned long range_ns, const enum hrtimer_mode mode);  
+
+要取消一个hrtimer，使用hrtimer_cancel：
+1.	int hrtimer_cancel(struct hrtimer *timer);  
+以下两个函数用于推后定时器的到期时间：
+extern u64  
+hrtimer_forward(struct hrtimer *timer, ktime_t now, ktime_t interval);  
+  
+/* Forward a hrtimer so it expires after the hrtimer's current now */  
+static inline u64 hrtimer_forward_now(struct hrtimer *timer,  
+                      ktime_t interval)  
+{  
+    return hrtimer_forward(timer, timer->base->get_time(), interval);  
+}  
+
+几个函数用于获取定时器的当前状态：
+static inline int hrtimer_active(const struct hrtimer *timer)  
+{  
+    return timer->state != HRTIMER_STATE_INACTIVE;  
+}  
+  
+static inline int hrtimer_is_queued(struct hrtimer *timer)  
+{  
+    return timer->state & HRTIMER_STATE_ENQUEUED;  
+}  
+	  
+	static inline int hrtimer_callback_running(struct hrtimer *timer)  
+	{  
+	    return timer->state & HRTIMER_STATE_CALLBACK;  
+	}  
+
+hrtimer_init最终会进入__hrtimer_init函数，该函数的主要目的是初始化hrtimer的base字段，同时初始化作为红黑树的节点的node字段：
+static void __hrtimer_init(struct hrtimer *timer, clockid_t clock_id,  
+               enum hrtimer_mode mode)  
+{  
+    struct hrtimer_cpu_base *cpu_base;  
+    int base;  
+  
+    memset(timer, 0, sizeof(struct hrtimer));  
+  
+    cpu_base = &__raw_get_cpu_var(hrtimer_bases);  
+	  
+	    if (clock_id == CLOCK_REALTIME && mode != HRTIMER_MODE_ABS)  
+	        clock_id = CLOCK_MONOTONIC;  
+	  
+	    base = hrtimer_clockid_to_base(clock_id);  
+	    timer->base = &cpu_base->clock_base[base];  
+	    timerqueue_init(&timer->node);  
+	        ......  
+	}  
+
+hrtimer_start和hrtimer_start_range_ns最终会把实际的工作交由__hrtimer_start_range_ns来完成：
+int __hrtimer_start_range_ns(struct hrtimer *timer, ktime_t tim,  
+        unsigned long delta_ns, const enum hrtimer_mode mode,  
+        int wakeup)  
+{  
+        ......          
+        /* 取得hrtimer_clock_base指针 */  
+        base = lock_hrtimer_base(timer, &flags);   
+        /* 如果已经在红黑树中，先移除它: */  
+        ret = remove_hrtimer(timer, base); ......  
+	        /* 如果是相对时间，则需要加上当前时间，因为内部是使用绝对时间 */  
+	        if (mode & HRTIMER_MODE_REL) {  
+	                tim = ktime_add_safe(tim, new_base->get_time());  
+	                ......  
+	        }   
+	        /* 设置到期的时间范围 */  
+	        hrtimer_set_expires_range_ns(timer, tim, delta_ns);  
+	        ......   
+	        /* 把hrtime按到期时间排序，加入到对应时间基准系统的红黑树中 */  
+	        /* 如果该定时器的是最早到期的，将会返回true */  
+	        leftmost = enqueue_hrtimer(timer, new_base);  
+	        /*  
+	        * Only allow reprogramming if the new base is on this CPU.  
+	        * (it might still be on another CPU if the timer was pending)  
+	        *  
+	        * XXX send_remote_softirq() ? 
+	        * 定时器比之前的到期时间要早，所以需要重新对tick_device进行编程，重新设定的的到期时间 
+	        */  
+	        if (leftmost && new_base->cpu_base == &__get_cpu_var(hrtimer_bases))  
+	                hrtimer_enqueue_reprogram(timer, new_base, wakeup);  
+	        unlock_hrtimer_base(timer, &flags);  
+	        return ret;  
+	}  
+	<p>  
+	</p> 
+ 
+2.2  hrtimer的到期处理
+高精度定时器系统有3个入口可以对到期定时器进行处理，它们分别是：
+?	没有切换到高精度模式时，在每个jiffie的tick事件中断中进行查询和处理；
+?	在HRTIMER_SOFTIRQ软中断中进行查询和处理；
+?	切换到高精度模式后，在每个clock_event_device的到期事件中断中进行查询和处理；
+低精度模式  因为系统并不是一开始就会支持高精度模式，而是在系统启动后的某个阶段，等待所有的条件都满足后，才会切换到高精度模式，当系统还没有切换到高精度模式时，所有的高精度定时器运行在低精度模式下，在每个jiffie的tick事件中断中进行到期定时器的查询和处理，显然这时候的精度和低分辨率定时器是一样的（HZ级别）。低精度模式下，每个tick事件中断中，hrtimer_run_queues函数会被调用，由它完成定时器的到期处理。hrtimer_run_queues首先判断目前高精度模式是否已经启用，如果已经切换到了高精度模式，什么也不做，直接返回：
+[cpp] view plain copy
+	void hrtimer_run_queues(void)  
+	{  
+	  
+	    if (hrtimer_hres_active())  
+	        return;  
+如果hrtimer_hres_active返回false，说明目前处于低精度模式下，则继续处理，它用一个for循环遍历各个时间基准系统，查询每个hrtimer_clock_base对应红黑树的左下节点，判断它的时间是否到期，如果到期，通过__run_hrtimer函数，对到期定时器进行处理，包括：调用定时器的回调函数、从红黑树中移除该定时器、根据回调函数的返回值决定是否重新启动该定时器等等：
+[cpp] view plain copy
+for (index = 0; index < HRTIMER_MAX_CLOCK_BASES; index++) {  
+    base = &cpu_base->clock_base[index];  
+    if (!timerqueue_getnext(&base->active))  
+        continue;  
+  
+    if (gettime) {  
+        hrtimer_get_softirq_time(cpu_base);  
+        gettime = 0;  
+    }  
+	  
+	    raw_spin_lock(&cpu_base->lock);  
+	  
+	    while ((node = timerqueue_getnext(&base->active))) {  
+	        struct hrtimer *timer;  
+	  
+	        timer = container_of(node, struct hrtimer, node);  
+	        if (base->softirq_time.tv64 <=  
+	                hrtimer_get_expires_tv64(timer))  
+	            break;  
+	  
+	        __run_hrtimer(timer, &base->softirq_time);  
+	    }  
+	    raw_spin_unlock(&cpu_base->lock);  
+	}  
+上面的timerqueue_getnext函数返回红黑树中的左下节点，之所以可以在while循环中使用该函数，是因为__run_hrtimer会在移除旧的左下节点时，新的左下节点会被更新到base->active->next字段中，使得循环可以继续执行，直到没有新的到期定时器为止。
+
+高精度模式  切换到高精度模式后，原来给cpu提供tick事件的tick_device（clock_event_device）会被高精度定时器系统接管，它的中断事件回调函数被设置为hrtimer_interrupt，红黑树中最左下的节点的定时器的到期时间被编程到该clock_event_device中，这样每次clock_event_device的中断意味着至少有一个高精度定时器到期。另外，当timekeeper系统中的时间需要修正，或者clock_event_device的到期事件时间被重新编程时，系统会发出HRTIMER_SOFTIRQ软中断，软中断的处理函数run_hrtimer_softirq最终也会调用hrtimer_interrupt函数对到期定时器进行处理，所以在这里我们只要讨论hrtimer_interrupt函数的实现即可。
+
+hrtimer_interrupt函数的前半部分和低精度模式下的hrtimer_run_queues函数完成相同的事情：它用一个for循环遍历各个时间基准系统，查询每个hrtimer_clock_base对应红黑树的左下节点，判断它的时间是否到期，如果到期，通过__run_hrtimer函数，对到期定时器进行处理，所以我们只讨论后半部分，在处理完所有到期定时器后，下一个到期定时器的到期时间保存在变量expires_next中，接下来的工作就是把这个到期时间编程到tick_device中：
+[cpp] view plain copy
+void hrtimer_interrupt(struct clock_event_device *dev)  
+{  
+        ......  
+    for (i = 0; i < HRTIMER_MAX_CLOCK_BASES; i++) {  
+                ......  
+        while ((node = timerqueue_getnext(&base->active))) {  
+                        ......  
+            if (basenow.tv64 < hrtimer_get_softexpires_tv64(timer)) {  
+                ktime_t expires;  
+	  
+	                expires = ktime_sub(hrtimer_get_expires(timer),  
+	                            base->offset);  
+	                if (expires.tv64 < expires_next.tv64)  
+	                    expires_next = expires;  
+	                break;  
+	            }  
+	  
+	            __run_hrtimer(timer, &basenow);  
+	        }  
+	    }  
+	  
+	    /* 
+	     * Store the new expiry value so the migration code can verify 
+	     * against it. 
+	     */  
+	    cpu_base->expires_next = expires_next;  
+	    raw_spin_unlock(&cpu_base->lock);  
+	  
+	    /* Reprogramming necessary ? */  
+	    if (expires_next.tv64 == KTIME_MAX ||  
+	        !tick_program_event(expires_next, 0)) {  
+	        cpu_base->hang_detected = 0;  
+	        return;  
+	    }  
+如果这时的tick_program_event返回了非0值，表示过期时间已经在当前时间的前面，这通常由以下原因造成：
+?	系统正在被调试跟踪，导致时间在走，程序不走；
+?	定时器的回调函数花了太长的时间；
+?	系统运行在虚拟机中，而虚拟机被调度导致停止运行；
+为了避免这些情况的发生，接下来系统提供3次机会，重新执行前面的循环，处理到期的定时器：
+[cpp] view plain copy
+	raw_spin_lock(&cpu_base->lock);  
+	now = hrtimer_update_base(cpu_base);  
+	cpu_base->nr_retries++;  
+	if (++retries < 3)  
+	    goto retry;  
+如果3次循环后还无法完成到期处理，系统不再循环，转为计算本次总循环的时间，然后把tick_device的到期时间强制设置为当前时间加上本次的总循环时间，不过推后的时间被限制在100ms以内：
+[cpp] view plain copy
+    delta = ktime_sub(now, entry_time);  
+    if (delta.tv64 > cpu_base->max_hang_time.tv64)  
+        cpu_base->max_hang_time = delta;  
+    /* 
+     * Limit it to a sensible value as we enforce a longer 
+     * delay. Give the CPU at least 100ms to catch up. 
+     */  
+    if (delta.tv64 > 100 * NSEC_PER_MSEC)  
+        expires_next = ktime_add_ns(now, 100 * NSEC_PER_MSEC);  
+	    else  
+	        expires_next = ktime_add(now, delta);  
+	    tick_program_event(expires_next, 1);  
+	    printk_once(KERN_WARNING "hrtimer: interrupt took %llu ns\n",  
+	            ktime_to_ns(delta));  
+	}  
+
+3）.  切换到高精度模式
+上面提到，尽管内核配置成支持高精度定时器，但并不是一开始就工作于高精度模式，系统在启动的开始阶段，还是按照传统的模式在运行：tick_device按HZ频率定期地产生tick事件，这时的hrtimer工作在低分辨率模式，到期事件在每个tick事件中断中由hrtimer_run_queues函数处理，同时，在低分辨率定时器（时间轮）的软件中断TIMER_SOFTIRQ中，hrtimer_run_pending会被调用，系统在这个函数中判断系统的条件是否满足切换到高精度模式，如果条件满足，则会切换至高分辨率模式，另外提一下，NO_HZ模式也是在该函数中判断并切换。
+[cpp] view plain copy
+	void hrtimer_run_pending(void)  
+	{  
+	    if (hrtimer_hres_active())  
+	        return;  
+	        ......  
+	    if (tick_check_oneshot_change(!hrtimer_is_hres_enabled()))  
+	        hrtimer_switch_to_hres();  
+	}  
+因为不管系统是否工作于高精度模式，每个TIMER_SOFTIRQ期间，该函数都会被调用，所以函数一开始先用hrtimer_hres_active判断目前高精度模式是否已经激活，如果已经激活，则说明之前的调用中已经切换了工作模式，不必再次切换，直接返回。hrtimer_hres_active很简单：
+[cpp] view plain copy
+	DEFINE_PER_CPU(struct hrtimer_cpu_base, hrtimer_bases) = {  
+	        ......  
+	}  
+	  
+	static inline int hrtimer_hres_active(void)  
+	{  
+	    return __this_cpu_read(hrtimer_bases.hres_active);  
+	}  
+hrtimer_run_pending函数接着通过tick_check_oneshot_change判断系统是否可以切换到高精度模式，
+[cpp] view plain copy
+int tick_check_oneshot_change(int allow_nohz)  
+{  
+    struct tick_sched *ts = &__get_cpu_var(tick_cpu_sched);  
+  
+    if (!test_and_clear_bit(0, &ts->check_clocks))  
+        return 0;  
+  
+    if (ts->nohz_mode != NOHZ_MODE_INACTIVE)  
+        return 0;  
+	  
+	    if (!timekeeping_valid_for_hres() || !tick_is_oneshot_available())  
+	        return 0;  
+	  
+	    if (!allow_nohz)  
+	        return 1;  
+	  
+	    tick_nohz_switch_to_nohz();  
+	    return 0;  
+	}  
+函数的一开始先判断check_clock标志的第0位是否被置位，如果没有置位，说明系统中没有注册符合要求的时钟事件设备，函数直接返回，check_clock标志由clocksource和clock_event_device系统的notify系统置位，当系统中有更高精度的clocksource被注册和选择后，或者有更精确的支持CLOCK_EVT_MODE_ONESHOT模式的clock_event_device被注册时，通过它们的notify函数，check_clock标志的第0为会置位。
+如果tick_sched结构中的nohz_mode字段不是NOHZ_MODE_INACTIVE，表明系统已经切换到其它模式，直接返回。nohz_mode的取值有3种：
+?	NOHZ_MODE_INACTIVE    // 未启用NO_HZ模式
+?	NOHZ_MODE_LOWRES    // 启用NO_HZ模式，hrtimer工作于低精度模式下
+?	NOHZ_MODE_HIGHRES   // 启用NO_HZ模式，hrtimer工作于高精度模式下
+接下来的timerkeeping_valid_for_hres判断timekeeper系统是否支持高精度模式，tick_is_oneshot_available判断tick_device是否支持CLOCK_EVT_MODE_ONESHOT模式。如果都满足要求，则继续往下判断。allow_nohz是函数的参数，为true表明可以切换到NOHZ_MODE_LOWRES 模式，函数将进入tick_nohz_switch_to_nohz，切换至NOHZ_MODE_LOWRES 模式，这里我们传入的allow_nohz是表达式：
+(!hrtimer_is_hres_enabled())
+所以当系统不允许高精度模式时，将会在tick_check_oneshot_change函数内，通过tick_nohz_switch_to_nohz切换至NOHZ_MODE_LOWRES 模式，如果系统允许高精度模式，传入的allow_nohz参数为false，tick_check_oneshot_change函数返回1，回到上面的hrtimer_run_pending函数，hrtimer_switch_to_hres函数将会被调用，已完成切换到NOHZ_MODE_HIGHRES高精度模式。好啦，真正的切换函数找到了，我们看一看它如何切换：
+首先，它通过hrtimer_cpu_base中的hres_active字段判断该cpu是否已经切换至高精度模式，如果是则直接返回：
+[cpp] view plain copy
+	static int hrtimer_switch_to_hres(void)  
+	{  
+	    int i, cpu = smp_processor_id();  
+	    struct hrtimer_cpu_base *base = &per_cpu(hrtimer_bases, cpu);  
+	    unsigned long flags;  
+	  
+	    if (base->hres_active)  
+	        return 1;  
+接着，通过tick_init_highres函数接管tick_device关联的clock_event_device：
+[cpp] view plain copy
+	local_irq_save(flags);  
+	  
+	if (tick_init_highres()) {  
+	    local_irq_restore(flags);  
+	    printk(KERN_WARNING "Could not switch to high resolution "  
+	                "mode on CPU %d\n", cpu);  
+	    return 0;  
+	}  
+tick_init_highres函数把tick_device切换到CLOCK_EVT_FEAT_ONESHOT模式，同时把clock_event_device的回调handler设置为hrtimer_interrupt，这样设置以后，tick_device的中断回调将由hrtimer_interrupt接管，hrtimer_interrupt在上面已经讨论过，它将完成高精度定时器的调度和到期处理。
+接着，设置hres_active标志，以表明高精度模式已经切换，然后把3个时间基准系统的resolution字段设为KTIME_HIGH_RES：
+[cpp] view plain copy
+	base->hres_active = 1;  
+	for (i = 0; i < HRTIMER_MAX_CLOCK_BASES; i++)  
+	    base->clock_base[i].resolution = KTIME_HIGH_RES;  
+最后，因为tick_device被高精度定时器接管，它将不会再提供原有的tick事件机制，所以需要由高精度定时器系统模拟一个tick事件设备，继续为系统提供tick事件能力，这个工作由tick_setup_sched_timer函数完成。因为刚刚完成切换，tick_device的到期时间并没有被正确地设置为下一个到期定时器的时间，这里使用retrigger_next_event函数，传入参数NULL，使得tick_device立刻产生到期中断，hrtimer_interrupt被调用一次，然后下一个到期的定时器的时间会编程到tick_device中，从而完成了到高精度模式的切换：
+[cpp] view plain copy
+	tick_setup_sched_timer();  
+	/* "Retrigger" the interrupt to get things going */  
+	retrigger_next_event(NULL);  
+	local_irq_restore(flags);  
+	return 1;  
+整个切换过程可以用下图表示：
+ 
+                                                                             图3.1  低精度模式切换至高精度模式
+4）.  模拟tick事件
+根据上一节的讨论，当系统切换到高精度模式后，tick_device被高精度定时器系统接管，不再定期地产生tick事件，我们知道，到目前的版本为止（V3.4），内核还没有彻底废除jiffies机制，系统还是依赖定期到来的tick事件，供进程调度系统和时间更新等操作，大量存在的低精度定时器也仍然依赖于jiffies的计数，所以，尽管tick_device被接管，高精度定时器系统还是要想办法继续提供定期的tick事件。为了达到这一目的，内核使用了一个取巧的办法：既然高精度模式已经启用，可以定义一个hrtimer，把它的到期时间设定为一个jiffy的时间，当这个hrtimer到期时，在这个hrtimer的到期回调函数中，进行和原来的tick_device同样的操作，然后把该hrtimer的到期时间顺延一个jiffy周期，如此反复循环，完美地模拟了原有tick_device的功能。下面我们看看具体点代码是如何实现的。
+在kernel/time/tick-sched.c中，内核定义了一个per_cpu全局变量：tick_cpu_sched，从而为每个cpu提供了一个tick_sched结构， 该结构主要用于管理NO_HZ配置下的tickless处理，因为模拟tick事件与tickless有很强的相关性，所以高精度定时器系统也利用了该结构的以下字段，用于完成模拟tick事件的操作：
+[cpp] view plain copy
+	struct tick_sched {  
+	    struct hrtimer          sched_timer;  
+	    unsigned long           check_clocks;  
+	    enum tick_nohz_mode     nohz_mode;  
+	        ......  
+	};  
+sched_timer就是要用于模拟tick事件的hrtimer，check_clock上面几节已经讨论过，用于notify系统通知hrtimer系统需要检查是否切换到高精度模式，nohz_mode则用于表示当前的工作模式。
+
+
+上一节提到，用于切换至高精度模式的函数是hrtimer_switch_to_hres，在它的最后，调用了函数tick_setup_sched_timer，该函数的作用就是设置一个用于模拟tick事件的hrtimer：
+[cpp] view plain copy
+void tick_setup_sched_timer(void)  
+{  
+    struct tick_sched *ts = &__get_cpu_var(tick_cpu_sched);  
+    ktime_t now = ktime_get();  
+  
+    /* 
+     * Emulate tick processing via per-CPU hrtimers: 
+     */  
+    hrtimer_init(&ts->sched_timer, CLOCK_MONOTONIC, HRTIMER_MODE_ABS);  
+	    ts->sched_timer.function = tick_sched_timer;  
+	  
+	    /* Get the next period (per cpu) */  
+	    hrtimer_set_expires(&ts->sched_timer, tick_init_jiffy_update());  
+	  
+	    for (;;) {  
+	        hrtimer_forward(&ts->sched_timer, now, tick_period);  
+	        hrtimer_start_expires(&ts->sched_timer,  
+	                      HRTIMER_MODE_ABS_PINNED);  
+	        /* Check, if the timer was already in the past */  
+	        if (hrtimer_active(&ts->sched_timer))  
+	            break;  
+	        now = ktime_get();  
+	    }  
+	  
+	#ifdef CONFIG_NO_HZ  
+	    if (tick_nohz_enabled)  
+	        ts->nohz_mode = NOHZ_MODE_HIGHRES;  
+	#endif  
+	}  
+该函数首先初始化该cpu所属的tick_sched结构中sched_timer字段，把该hrtimer的回调函数设置为tick_sched_timer，然后把它的到期时间设定为下一个jiffy时刻，返回前把工作模式设置为NOHZ_MODE_HIGHRES，表明是利用高精度模式实现NO_HZ。
+接着我们关注一下hrtimer的回调函数tick_sched_timer，我们知道，系统中的jiffies计数，时间更新等是全局操作，在smp系统中，只有一个cpu负责该工作，所以在tick_sched_timer的一开始，先判断当前cpu是否负责更新jiffies和时间，如果是，则执行更新操作：
+[cpp] view plain copy
+static enum hrtimer_restart tick_sched_timer(struct hrtimer *timer)  
+{  
+        ......  
+  
+#ifdef CONFIG_NO_HZ  
+    if (unlikely(tick_do_timer_cpu == TICK_DO_TIMER_NONE))  
+        tick_do_timer_cpu = cpu;  
+#endif  
+  
+	    /* Check, if the jiffies need an update */  
+	    if (tick_do_timer_cpu == cpu)  
+	        tick_do_update_jiffies64(now);  
+然后，利用regs指针确保当前是在中断上下文中，然后调用update_process_timer：
+[cpp] view plain copy
+	if (regs) {  
+	               ......  
+	    update_process_times(user_mode(regs));  
+	    ......  
+	}  
+最后，把hrtimer的到期时间推进一个tick周期，返回HRTIMER_RESTART表明该hrtimer需要再次启动，以便产生下一个tick事件。
+[cpp] view plain copy
+	    hrtimer_forward(timer, now, tick_period);  
+	  
+	    return HRTIMER_RESTART;  
+	}  
+关于update_process_tim
+
+
+15. offsetof container_of
+2）、offsetof宏
+　　使用offsetof宏需要包含stddef.h头文件，实例可以参考：http://www.cplusplus.com/reference/cstddef/offsetof/。
+      offsetof宏的定义如下：
+#define offsetof(type, member) (size_t)&(((type*)0)->member)
+　　巧妙之处在于将地址0强制转换为type类型的指针，从而定位到member在结构体中偏移位置。编译器认为0是一个有效的地址，从而认为0是type指针的起始地址。
+3）、container_of宏
+　　使用container_of宏需要包含linux/kernel.h头文件，container_of宏的定义如下所示：
+#define container_of(ptr, type, member) ({ \
+     const typeof( ((type *)0)->member ) *__mptr = (ptr); \
+     (type *)( (char *)__mptr - offsetof(type,member) );})    
+container_of宏分为两部分，
+第一部分：const typeof( ((type *)0)->member ) *__mptr = (ptr);
+通过typeof定义一个member指针类型的指针变量__mptr，（即__mptr是指向member类型的指针），并将__mptr赋值为ptr。
+第二部分： (type *)( (char *)__mptr - offsetof(type,member) )，通过offsetof宏计算出member在type中的偏移，然后用member的实际地址__mptr减去偏移，得到type的起始地址，即指向type类型的指针。
+第一部分的目的是为了将统一转换为member类型指针。
+4）、测试程序
+ 
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
+ #define NAME_STR_LEN  32
+ 
+ #define offsetof(type, member) (size_t)&(((type*)0)->member)
+ 
+ #define container_of(ptr, type, member) ({ \
+         const typeof( ((type *)0)->member ) *__mptr = (ptr); \
+         (type *)( (char *)__mptr - offsetof(type,member) );})
+ 
+ typedef struct student_info
+ {
+     int  id;
+     char name[NAME_STR_LEN];
+     int  age;
+ }student_info;
+ 
+ 
+ int main()
+ {
+     size_t off_set = 0;
+     off_set = offsetof(student_info, id);
+     printf("id offset: %u\n",off_set);
+     off_set = offsetof(student_info, name);
+     printf("name offset: %u\n",off_set);
+     off_set = offsetof(student_info, age);
+     printf("age offset: %u\n",off_set);
+     student_info *stu = (student_info *)malloc(sizeof(student_info));
+     stu->age = 10;
+     student_info *ptr = container_of(&(stu->age), student_info, age);
+     printf("age:%d\n", ptr->age);
+     printf("stu address:%p\n", stu);
+     printf("ptr address:%p\n", ptr);
+     return 0;
+ }
+ 
+测试结果：
+ gcc offsetof.c -o offset
+ ./offset
+ id offset: 0
+ name offset: 4
+ age offset: 36
+ stu address:0x9e1c008
+ ptr address: 0x9e1c008
+
+
+16.Linux内存管理之mmap详解
+一. mmap系统调用
+1). mmap系统调用    
+    mmap将一个文件或者其它对象映射进内存。文件被映射到多个页上，如果文件的大小不是所有页的大小之和，最后一个页不被使用的空间将会清零。munmap执行相反的操作，删除特定地址区域的对象映射。
+当使用mmap映射文件到进程后,就可以直接操作这段虚拟地址进行文件的读写等操作,不必再调用read,write等系统调用.但需注意,直接对该段内存写时不会写入超过当前文件大小的内容.
+采用共享内存通信的一个显而易见的好处是效率高，因为进程可以直接读写内存，而不需要任何数据的拷贝。对于像管道和消息队列等通信方式，则需要在内核和用户空间进行四次的数据拷贝，而共享内存则只拷贝两次数据：一次从输入文件到共享内存区，另一次从共享内存区到输出文件。实际上，进程之间在共享内存时，并不总是读写少量数据后就解除映射，有新的通信时，再重新建立共享内存区域。而是保持共享区域，直到通信完毕为止，这样，数据内容一直保存在共享内存中，并没有写回文件。共享内存中的内容往往是在解除映射时才写回文件的。因此，采用共享内存的通信方式效率是非常高的。  
+    基于文件的映射，在mmap和munmap执行过程的任何时刻，被映射文件的st_atime可能被更新。如果st_atime字段在前述的情况下没有得到更新，首次对映射区的第一个页索引时会更新该字段的值。用PROT_WRITE 和 MAP_SHARED标志建立起来的文件映射，其st_ctime 和 st_mtime在对映射区写入之后，但在msync()通过MS_SYNC 和 MS_ASYNC两个标志调用之前会被更新。
+用法：
+#include <sys/mman.h>
+void *mmap(void *start, size_t length, int prot, int flags,
+int fd, off_t offset);
+int munmap(void *start, size_t length);
+返回说明：
+成功执行时，mmap()返回被映射区的指针，munmap()返回0。失败时，mmap()返回MAP_FAILED[其值为(void *)-1]，munmap返回-1。errno被设为以下的某个值
+EACCES：访问出错
+EAGAIN：文件已被锁定，或者太多的内存已被锁定
+EBADF：fd不是有效的文件描述词
+EINVAL：一个或者多个参数无效
+ENFILE：已达到系统对打开文件的限制
+ENODEV：指定文件所在的文件系统不支持内存映射
+ENOMEM：内存不足，或者进程已超出最大内存映射数量
+EPERM：权能不足，操作不允许
+ETXTBSY：已写的方式打开文件，同时指定MAP_DENYWRITE标志
+SIGSEGV：试着向只读区写入
+SIGBUS：试着访问不属于进程的内存区
+参数：
+start：映射区的开始地址。
+
+length：映射区的长度。
+
+prot：期望的内存保护标志，不能与文件的打开模式冲突。是以下的某个值，可以通过or运算合理地组合在一起
+PROT_EXEC //页内容可以被执行
+PROT_READ //页内容可以被读取
+PROT_WRITE //页可以被写入
+PROT_NONE //页不可访问
+
+flags：指定映射对象的类型，映射选项和映射页是否可以共享。它的值可以是一个或者多个以下位的组合体
+MAP_FIXED //使用指定的映射起始地址，如果由start和len参数指定的内存区重叠于现存的映射空间，重叠部分将会被丢弃。如果指定的起始地址不可用，操作将会失败。并且起始地址必须落在页的边界上。
+MAP_SHARED //与其它所有映射这个对象的进程共享映射空间。对共享区的写入，相当于输出到文件。直到msync()或者munmap()被调用，文件实际上不会被更新。
+MAP_PRIVATE //建立一个写入时拷贝的私有映射。内存区域的写入不会影响到原文件。这个标志和以上标志是互斥的，只能使用其中一个。
+MAP_DENYWRITE //这个标志被忽略。
+MAP_EXECUTABLE //同上
+MAP_NORESERVE //不要为这个映射保留交换空间。当交换空间被保留，对映射区修改的可能会得到保证。当交换空间不被保留，同时内存不足，对映射区的修改会引起段违例信号。
+MAP_LOCKED //锁定映射区的页面，从而防止页面被交换出内存。
+MAP_GROWSDOWN //用于堆栈，告诉内核VM系统，映射区可以向下扩展。
+MAP_ANONYMOUS //匿名映射，映射区不与任何文件关联。
+MAP_ANON //MAP_ANONYMOUS的别称，不再被使用。
+MAP_FILE //兼容标志，被忽略。
+MAP_32BIT //将映射区放在进程地址空间的低2GB，MAP_FIXED指定时会被忽略。当前这个标志只在x86-64平台上得到支持。
+MAP_POPULATE //为文件映射通过预读的方式准备好页表。随后对映射区的访问不会被页违例阻塞。
+MAP_NONBLOCK //仅和MAP_POPULATE一起使用时才有意义。不执行预读，只为已存在于内存中的页面建立页表入口。
+
+fd：有效的文件描述词。如果MAP_ANONYMOUS被设定，为了兼容问题，其值应为-1。
+
+offset：被映射对象内容的起点。
+
+2). 系统调用munmap() 
+#include <sys/mman.h>
+
+int munmap( void * addr, size_t len ) 
+该调用在进程地址空间中解除一个映射关系，addr是调用mmap()时返回的地址，len是映射区的大小。当映射关系解除后，对原来映射地址的访问将导致段错误发生。 
+
+3. 系统调用msync() 
+#include <sys/mman.h>
+
+int msync ( void * addr , size_t len, int flags) 
+一般说来，进程在映射空间的对共享内容的改变并不直接写回到磁盘文件中，往往在调用munmap（）后才执行该操作。可以通过调用msync()实现磁盘上文件内容与共享内存区的内容一致。  
+
+二. 系统调用mmap()用于共享内存的两种方式： 
+（1）使用普通文件提供的内存映射：适用于任何进程之间；此时，需要打开或创建一个文件，然后再调用mmap()；典型调用代码如下： 
+ 
+1.	fd=open(name, flag, mode); 
+2.	if(fd<0) 
+3.	   ... 
+4.	ptr=mmap(NULL, len , PROT_READ|PROT_WRITE, MAP_SHARED , fd , 0);
+通过mmap()实现共享内存的通信方式有许多特点和要注意的地方
+（2）使用特殊文件提供匿名内存映射：适用于具有亲缘关系的进程之间；由于父子进程特殊的亲缘关系，在父进程中先调用mmap()，然后调用fork()。那么在调用fork()之后，子进程继承父进程匿名映射后的地址空间，同样也继承mmap()返回的地址，这样，父子进程就可以通过映射区域进行通信了。注意，这里不是一般的继承关系。一般来说，子进程单独维护从父进程继承下来的一些变量。而mmap()返回的地址，却由父子进程共同维护。 
+对于具有亲缘关系的进程实现共享内存最好的方式应该是采用匿名内存映射的方式。此时，不必指定具体的文件，只要设置相应的标志即可.
+
+三. mmap进行内存映射的原理
+     mmap系统调用的最终目的是将,设备或文件映射到用户进程的虚拟地址空间,实现用户进程对文件的直接读写,这个任务可以分为以下三步:
+1.在用户虚拟地址空间中寻找空闲的满足要求的一段连续的虚拟地址空间,为映射做准备(由内核mmap系统调用完成)
+       每个进程拥有3G字节的用户虚存空间。但是，这并不意味着用户进程在这3G的范围内可以任意使用，因为虚存空间最终得映射到某个物理存储空间（内存或磁盘空间），才真正可以使用。
+       那么，内核怎样管理每个进程3G的虚存空间呢？概括地说，用户进程经过编译、链接后形成的映象文件有一个代码段和数据段（包括data段和bss段），其中代码段在下，数据段在上。数据段中包括了所有静态分配的数据空间，即全局变量和所有申明为static的局部变量，这些空间是进程所必需的基本要求，这些空间是在建立一个进程的运行映像时就分配好的。除此之外，堆栈使用的空间也属于基本要求，所以也是在建立进程时就分配好的，如图3.1所示：
+  
+ 图3.1  进程虚拟空间的划分
+      在内核中,这样每个区域用一个结构struct vm_area_struct 来表示.它描述的是一段连续的、具有相同访问属性的虚存空间，该虚存空间的大小为物理内存页面的整数倍。可以使用 cat /proc/<pid>/maps来查看一个进程的内存使用情况,pid是进程号.其中显示的每一行对应进程的一个vm_area_struct结构.
+下面是struct vm_area_struct结构体的定义：
+	#include <linux/mm_types.h>
+	
+
+	/* This struct defines a memory VMM memory area. */
+	
+
+	struct vm_area_struct {
+	struct mm_struct * vm_mm; /* VM area parameters */
+	unsigned long vm_start;
+	unsigned long vm_end;
+	
+
+	/* linked list of VM areas per task, sorted by address */
+	struct vm_area_struct *vm_next;
+	pgprot_t vm_page_prot;
+	unsigned long vm_flags;
+	
+
+	/* AVL tree of VM areas per task, sorted by address */
+	short vm_avl_height;
+	struct vm_area_struct * vm_avl_left;
+	struct vm_area_struct * vm_avl_right;
+	
+
+	/* For areas with an address space and backing store,
+	vm_area_struct *vm_next_share;
+	struct vm_area_struct **vm_pprev_share;
+	struct vm_operations_struct * vm_ops;
+	unsigned long vm_pgoff; /* offset in PAGE_SIZE units, *not* PAGE_CACHE_SIZE */
+	struct file * vm_file;
+	unsigned long vm_raend;
+	void * vm_private_data; /* was vm_pte (shared mem) */
+	};
+      通常，进程所使用到的虚存空间不连续，且各部分虚存空间的访问属性也可能不同。所以一个进程的虚存空间需要多个vm_area_struct结构来描述。在vm_area_struct结构的数目较少的时候，各个vm_area_struct按照升序排序，以单链表的形式组织数据（通过vm_next指针指向下一个vm_area_struct结构）。但是当vm_area_struct结构的数据较多的时候，仍然采用链表组织的化，势必会影响到它的搜索速度。针对这个问题，vm_area_struct还添加了vm_avl_hight（树高）、vm_avl_left（左子节点）、vm_avl_right（右子节点）三个成员来实现AVL树，以提高vm_area_struct的搜索速度。
+　　假如该vm_area_struct描述的是一个文件映射的虚存空间，成员vm_file便指向被映射的文件的file结构，vm_pgoff是该虚存空间起始地址在vm_file文件里面的文件偏移，单位为物理页面。
+ 
+图3.2  进程虚拟地址示意图 
+因此,mmap系统调用所完成的工作就是准备这样一段虚存空间,并建立vm_area_struct结构体,将其传给具体的设备驱动程序.
+2. 建立虚拟地址空间和文件或设备的物理地址之间的映射(设备驱动完成)
+  建立文件映射的第二步就是建立虚拟地址和具体的物理地址之间的映射,这是通过修改进程页表来实现的.mmap方法是file_opeartions结构的成员:
+  int (*mmap)(struct file *,struct vm_area_struct *);
+
+linux有2个方法建立页表:
+(1) 使用remap_pfn_range一次建立所有页表.
+   int remap_pfn_range(struct vm_area_struct *vma, unsigned long virt_addr, unsigned long pfn, unsigned long size, pgprot_t prot); 
+返回值:
+成功返回 0, 失败返回一个负的错误值
+参数说明:
+vma 用户进程创建一个vma区域
+
+virt_addr 重新映射应当开始的用户虚拟地址. 这个函数建立页表为这个虚拟地址范围从 virt_addr 到 virt_addr_size.
+
+pfn 页帧号, 对应虚拟地址应当被映射的物理地址. 这个页帧号简单地是物理地址右移 PAGE_SHIFT 位. 对大部分使用, VMA 结构的 vm_paoff 成员正好包含你需要的值. 这个函数影响物理地址从 (pfn<<PAGE_SHIFT) 到 (pfn<<PAGE_SHIFT)+size.
+
+size 正在被重新映射的区的大小, 以字节.
+
+prot 给新 VMA 要求的"protection". 驱动可(并且应当)使用在vma->vm_page_prot 中找到的值.
+(2) 使用nopage VMA方法每次建立一个页表项.
+   struct page *(*nopage)(struct vm_area_struct *vma, unsigned long address, int *type);
+返回值:
+成功则返回一个有效映射页,失败返回NULL.
+参数说明:
+address 代表从用户空间传过来的用户空间虚拟地址.
+返回一个有效映射页.
+
+(3) 使用方面的限制：
+remap_pfn_range不能映射常规内存，只存取保留页和在物理内存顶之上的物理地址。因为保留页和在物理内存顶之上的物理地址内存管理系统的各个子模块管理不到。640 KB 和 1MB 是保留页可能映射，设备I/O内存也可以映射。如果想把kmalloc()申请的内存映射到用户空间，则可以通过mem_map_reserve()把相应的内存设置为保留后就可以。
+3. 当实际访问新映射的页面时的操作(由缺页中断完成)
+(1)  page cache及swap cache中页面的区分：一个被访问文件的物理页面都驻留在page cache或swap cache中，一个页面的所有信息由struct page来描述。struct page中有一个域为指针mapping ，它指向一个struct address_space类型结构。page cache或swap cache中的所有页面就是根据address_space结构以及一个偏移量来区分的。
+ 
+(2) 文件与 address_space结构的对应：一个具体的文件在打开后，内核会在内存中为之建立一个struct inode结构，其中的i_mapping域指向一个address_space结构。这样，一个文件就对应一个address_space结构，一个 address_space与一个偏移量能够确定一个page cache 或swap cache中的一个页面。因此，当要寻址某个数据时，很容易根据给定的文件及数据在文件内的偏移量而找到相应的页面。 
+(3) 进程调用mmap()时，只是在进程空间内新增了一块相应大小的缓冲区，并设置了相应的访问标识，但并没有建立进程空间到物理页面的映射。因此，第一次访问该空间时，会引发一个缺页异常。 
+
+(4) 对于共享内存映射情况，缺页异常处理程序首先在swap cache中寻找目标页（符合address_space以及偏移量的物理页），如果找到，则直接返回地址；如果没有找到，则判断该页是否在交换区 (swap area)，如果在，则执行一个换入操作；如果上述两种情况都不满足，处理程序将分配新的物理页面，并把它插入到page cache中。进程最终将更新进程页表。 
+
+     注：对于映射普通文件情况（非共享映射），缺页异常处理程序首先会在page cache中根据address_space以及数据偏移量寻找相应的页面。如果没有找到，则说明文件数据还没有读入内存，处理程序会从磁盘读入相应的页面，并返回相应地址，同时，进程页表也会更新.
+
+(5) 所有进程在映射同一个共享内存区域时，情况都一样，在建立线性地址与物理地址之间的映射之后，不论进程各自的返回地址如何，实际访问的必然是同一个共享内存区域对应的物理页面。  
+
+
+17.C中malloc和memset函数
+在C中 malloc和memset是2个常用的对内存操作的函数。首先还是来看一下这2个函数的函数原型。
+1).malloc函数
+malloc函数用于从堆上分配指定字节的内存空间。
+
+void * malloc(size_t n);
+
+其中，形参n为要求分配的内存字节数。如果执行成功，函数范围获得的内存空间的首地址；执行失败，返回值为NULL。由于函数返回值值的类型为void的指针，因此，可以将void指针类型转换后赋值给任意类型指针，这样就可以通过操作该类型指针来操作从堆上获得的内存空间。
+需要注意的是malloc函数分配得到的内存空间是未初始化的。有时候，在使用前需要对该内存空间进行初始化，memset就派上用场了。
+
+2).memset函数
+    
+void * memset (void * p,int c,size_t n);
+
+其中，指针p为所操作的内存空间的首地址，c为每个字节所赋的值，n为所操作内存空间的字节长度，也就是内存被赋值为c的字节数。
+在使用memset时经常要注意的它是以字节为单位进行赋值的，所赋值的范围是0x00～0xFF。若想要对一个double或int型的数组赋值时，就特别需要注意这一点：
+
+example1:
+
+char a[4];
+
+memset(a, '\0', 4);
+
+example2:
+
+int a[4];
+
+memset(a, 1, 4);//这里改成memset(a,1,5*sizeof(int))也是不可以的
+
+第一个例子是正确的，memset对字符数组里的每个char类型元素赋值为NULL。第二个例子显然得到的结果不是把int型数组里的每个元素赋值为了1。因为memset函数以字节为单位进行赋值，那么数组中一个int型元素的4个字节都将被赋值为1(或者说ASCII码1所对应的字符)，实际上它所表示的整数是0x01010101。
+另外，在使用malloc为一个二维数组分配内存空间时，要特别注意使用memset进行初始化可能会出错。
+
+int m = 2;
+int n = 3;
+int i;
+
+//二位数组a[m][n]
+int **a;
+
+a = (int **) malloc(m * sizeof(int *));
+
+for(i=0; i<m; ++i)
+{
+    a[i] = (int *) malloc(n * sizeof(int));
+}
+
+memset(a, 0, sizeof(int) * m * n);
+
+对所有二维以上的数组使用memset时，若此多维数组是通过多次调用malloc函数搭积木分配得到的，那么该数组的内存空间可能不连续。使用memset函数进行连续的统一赋值就毫无意义了。直接声明的多维数组如a[2][3]的内存空间显然是连续的，此时使用memset函数初始化就没有问题。
+
+
+18.推挽 开漏
+线路经过一个由P-MOS和N-MOS管组成的单元电路。而所谓推挽输出模式，则是根据其工作方式来命名的。在输出高电平时，P-MOS导通，低电平时，N-MOS管导通。两个管子轮流导通，一个负责灌电流，一个负责拉电流，使其负载能力和开关速度都比普通的方式有很大的提高。
+在开漏输出模式时，如果我们控制输出为0，低电平，则使N-MOS管导通，使输出接地，若控制输出为1(无法直接输出高电平)，则既不输出高电平，也不输出低电平，为高阻态。普通开漏输出一般应用在电平不匹配的场合，如需要输出5伏的高电平，就需要在外部接一个上拉电阻，电源为5伏，把GPIO设置为开漏模式，当输出高阻态时，由上拉电阻和电源向外输出 5 伏的电平。
+
+19.品质因子 Q
+品质因子或Q因子是物理及工程中的无量纲参数，是表示振子阻尼性质的物理量，也可表示振子的共振频率相对于带宽的大小， 高Q因子表示振子能量损失的速率较慢，振动可持续较长的时间，例如一个单摆在空气中运动，其Q因子较高，而在油中运动的单摆Q因子较低。高Q因子的振子一般其阻尼也较小。
+Q因子较高的振子在共振时，在共振频率附近的振幅较大，但会产生的共振的频率范围比较小，此频率范围可以称为带宽。例如一台无线电接收器内的调谐电路Q因子较高，要调整接收器对准一特定频率会比较困难，但其选择性较好，在过滤频谱上邻近电台的信号上也有较佳的效果。Q因子较高的振子会产生共振的频率范围较小，也比较稳定。
+系统的Q因子可能会随着应用场合及需求的不同而有大幅的差异。强调阻尼特性的系统（例如防止门突然关闭的阻尼器）其Q因子为?2，而时钟、激光或是其他需要强烈共振或是要求频率稳定性的系统其Q因子也较高。音叉的Q因子大约为1000，原子钟、加速器中的超导射频或是光学共振腔的Q因子可以到10甚至更高。
+Q因子的概念是来自电子工程中，评量一调谐电路或其他振子的“品质”。
+
+
+20.步进电机
+1.8°步进电机和0.9°步进电机有什么区别？
+相数是指电机内部的线圈组数，步进电机的相数不同，步进电机的齿数不同，步进电机的步距角也不同。步进电机每个步距角对应一个脉冲。
+例1：2相4线步进电机42BYG250-48，它的定子线圈数（相数）是2，定子每极（共有8个极）的齿数是5，转子的齿数是50，该电机的步距角是1.8°（因为定子线圈每接收一个脉冲，转子齿即被定子齿吸引，转1.8°处于稳定位置）。
+转子每一个齿距为：360°/50=7.2°，
+拍数为：7.2°/1.8°=4（拍）
+也就是说，步进电机42BYG250-48每转一个齿距需要4个脉冲。
+ 
+例2：2相4线步进电机42BYG2100-48，它的定子线圈数（相数）是2，定子每极（共有8个极）的齿数是10，转子的齿数是100，该电机的步距角是0.9°（因为定子线圈每接收一个脉冲，转子齿即被定子齿吸引，转0.9°处于稳定位置）。
+转子每一个齿距为：360°/100=3.6°，
+拍数为：3.6°/0.9°=4（拍）
+步进电机42BYG2100-48每转一个齿距也需要4个脉冲。
+
+42步进电机是指安装机座尺寸是42mm的步进电机，其最大输出力矩是0.5NM；
+57步进电机是指安装机座尺寸是57mm的步进电机，其最大输出力矩是3.0NM。
+
+PPS是每秒钟脉冲数,0.9°的电机每圈的脉冲数400,6666PPS表示速度16.665圈/秒
+
+最常见的三种步距角，分别是0.9°，1.8°和7.5°。这三种步距角，也就对应了步进电机每旋转一周（360°），需要的脉冲信号个数为400个、200个以及48个。
+与脉冲信号相关的另一个参数是步进细分数，在驱动电路电路板上。驱动电路的主芯片，通常具有驱动细分功能。比如我的Melzi电路板上用的芯片A4982，就具有驱动细分的功能。所谓驱动细分，就是把原本一个脉冲信号前进的角度，再次进行分割，比如1/2、1/4或1/16等。这样，可以对步进电机进行更精细的控制。在Melzi电路板的设计中，A4982被设置为1/16驱动细分。在驱动细分起作用的情况下，假如你使用的步进电机的步距角为1.8°，步进电机旋转一周就需要3200个脉冲信号（200×16）。
+
+
+21.摄像头
+焦距越长、拍摄距离越近、光圈越明亮，虚化效果越强
+镜头的焦距决定了当你拍摄一件物品时，到底它会在你的相片中放到多大。焦距愈长的镜头，拍摄出来的照片带有较大压迫感，景深也愈浅，反而然之。
+焦距较短的，通常是广角镜，而焦距较长的，则是远摄镜头（或称长焦镜、望远镜头）。
+同一件物品，近看时很大，远看时却变小了，这正正是所谓的透视。在你行近／行远对目标拍照时，物品在画面中变大缩小，这就是所谓的透视改变。
+下面这个表显示了一般来说什么情况下叫做广角镜，什么情况下叫做长焦镜，以及应该在什么时间应用。
+
+镜头的焦距：	一般情况下的拍摄用途
+少于21mm	超广角镜，用来拍摄建筑物。
+21-35mm	广角镜，用来拍摄风景
+35-70mm	一般用来拍摄街景或者是写实摄影
+70-135mm	中距离人像
+135-300mm	用来拍摄远处的运动、鸟类以及动生动物
+留意上面所指的焦距，指的是大概范围。实际使用时因人而异，例如拍摄风景照时，你亦可能会使用长焦镜收窄取景范围。上面所说的焦距，是基于传统35mm篇幅的菲林相机。如果你使用的是小DC或者是单镜反光相机，感光元件的面积不同，焦距的长度也会有所不同。
+
+光学变焦是将焦距真真正正延长，但数码变焦只是将相片的像素「撑大」，撑大后的相片质素一般十分差。
+
+以18-135为例，上面的上面写着光圈是3.5-5.6，这个意思是，在18mm时，最大光圈是3.5，135mm时，最大光圈是5.6，在你放大时，光圈会收细。有些高价的变焦镜是恆定光圈，不会因为你变焦而改变光圈大小，就如上图右下角的Canon 70-200mm，光圈就固定位f/2.8
+
+光圈就是镜头控制进入机身感光元件进光量的装置，可以将它视作为一个圆形的小孔。通常而言光圈的大小是由镜头孔径和焦距决定的。当光线通过镜片之后，再经由光圈照射到CMOS感光元件上。因此镜头的光圈越大，单位时间内通过这个光圈的进光量就越多，感光元件获得的信息也就越丰富，最后照片的效果越好。
+
+当相机的镜头对着某一物体聚焦清晰时，在镜头中心所对的位置垂直镜头轴线的同一平面的点都可以在胶片或者接收器上相当清晰的图像，在这个平面沿着镜头轴线的前面和后面一定范围的点也可以结成眼睛可以接受的较清晰的像点，把这个平面的前面和后面的所有景物的距离叫做相机的景深。
+	1，光圈越大景深越小，光圈越小景深越大。
+
+　　2，镜头焦距越长景深越小、反之景深越大。
+
+　　3，主体越近，景深越小，主体越远，景深越大。
+
+　　镜头的焦距越短，景深的范围就越大，光圈越小，景深就越大。一只超广角镜头几乎在所有的光圈下都有极大的景深。一只长焦镜头即使在最小光圈的情况下，景深范围也会非常有限。一些单镜头反光相机都有景深预测按钮，所以你在按下快门之前就可以预测到景深的情况。
+
+手机主流的28mm镜头简称标准摄像头：
+标准+黑白            华为p10
+标准+超广角       lg g5
+标准+2倍焦距      苹果7
+
+22.三极管
+三极管8050是NPN型晶体三极管，Ube电压是0.7V
+
+
+23. PCB工艺PK：喷锡VS镀金VS沉金
+整板镀金，一般指的是“电镀金”“电镀镍金板”“电解金”“电金”“电镍金板”，有软金和硬金的区分（一般硬金是用于金手指的），原理是将镍和金（俗称金盐）溶化于化学药水中，将线路板浸在电镀缸内并接通电流而在电路板的铜箔面上生成镍金镀层，电镍金因镀层硬度高，耐磨损，不易氧化的优点。
+沉金是通过化学氧化还原反应的方法生成一层镀层，一般厚度较厚，是化学镍金金层沉积方法的一种，可以达到较厚的金层
+一般沉金对于金的厚度比镀金厚很多，沉金会呈金黄色较镀金来说更黄，看表面客户更满意沉金。这二者所形成的晶体结构不一样。由于沉金与镀金所形成的晶体结构不一样，沉金较镀金来说更容易焊接，不会造成焊接不良。因为沉金比镀金软，所以金手指板一般选镀金，硬金耐磨。沉金板只有焊盘上有镍金，趋肤效应中信号的传输是在铜层不会对信号有影响。
+沉金较镀金来说晶体结构更致密，不易产成氧化。随着布线越来越密，线宽、间距已经到了3-4MIL。镀金则容易产生金丝短路。沉金板只有焊盘上有镍金，所以不会产成金丝短路。6、沉金板只有焊盘上有镍金，所以线路上的阻焊与铜层的结合更牢固。工程在作补偿时不会对间距产生影响。7、一般用于相对要求较高的板子，平整度要好，一般就采用沉金，沉金一般不会出现组装后的黑垫现象。沉金板的平整性与待用寿命与镀金板一样好。
+随着IC的集成度越来越高，IC脚也越多越密。而垂直喷锡工艺很难将成细的焊盘吹平整，这就给SMT的贴装带来了难度；另外喷锡板的待用寿命（shelflife）很短。而镀金板正好解决了这些问题：1对于表面贴装工艺,尤其对于0603及0402超小型表贴,因为焊盘平整度直接关系到锡膏印制工序的质量,对后面的再流焊接质量起到决定性影响,所以,整板镀金在高密度和超小型表贴工艺中时常见到。2在试制阶段,受元件采购等因素的影响往往不是板子来了马上就焊,而是经常要等上几个星期甚至个把月才用,镀金板的待用寿命(shelflife)比铅锡合 金长很多倍所以大家都乐意采用.再说镀金PCB在度样阶段的成本与铅锡合金板相比相差无几。 但随着布线越来越密，线宽、间距已经到了3-4MIL。因此带来了金丝短路的问题。
+
+
+24. 堆heap和栈stack的管理
+（1）栈区（stack）：由编译器自动分配和释放，存放函数的参数值、局部变量的值等，其操作方式类似于数据结构中的栈。
+（2）堆区（heap）：一般由程序员分配和释放，若程序员不释放，程序结束时可能由操作系统回收。分配方式类似于数据结构中的链表。
+（3）全局区（静态区）（static）：全局变量和静态变量的存储是放在一块的，初始化的全局变量和静态变量在一块区域，未初始化的全局变量和未初始化的静态变量在相邻的另一块区域。程序结束后由系统自动释放。
+（4）文字常量区：常量字符串就是存放在这里的。
+（5）程序代码区：存放函数体的二进制代码。
+例如：
+int a=0;   //全局初始化区
+char *p1;   //全局未初始化区
+main()
+{
+int b;   //栈
+char s[]="abc";   //栈
+char *p3= "1234567";   //在文字常量区Flash
+static int c =0 ;   //静态初始化区
+p1= (char *)malloc(10);   //堆区
+strcpy（p1,"123456");   //"123456"放在常量区
+}
+所以堆和栈的区别：
+stack的空间由操作系统自动分配/释放，heap上的空间手动分配/释放。
+stack的空间有限，heap是很大的自由存储区。
+程序在编译期和函数分配内存都是在栈上进行，且程序运行中函数调用时参数的传递也是在栈上进行。
+------------------------------------------------------------------------------------------------------
+
+1）.堆和栈大小
+定义大小在startup_stm32f2xx.s
+Stack_Size  EQU  0x00000400
+AREA  STACK, NOINIT, READWRITE, ALIGN=3 
+Stack_Mem  SPACE  Stack_Size 
+__initial_sp
+; Heap Configuration 
+;  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8> 
+;
+Heap_Size  EQU  0x00000200
+AREA  HEAP, NOINIT, READWRITE, ALIGN=3 
+__heap_base
+2）.堆和栈位置
+通过MAP文件可知
+HEAP  0x200106f8  Section  512  startup_stm32f2xx.o(HEAP) 
+STACK  0x200108f8  Section  1024  startup_stm32f2xx.o(STACK)
+__heap_base  0x200106f8  Data  0  startup_stm32f2xx.o(HEAP) 
+__heap_limit  0x200108f8  Data  0  startup_stm32f2xx.o(HEAP) 
+__initial_sp  0x20010cf8  Data  0  startup_stm32f2xx.o(STACK)
+显然 Cortex-m3资料可知：__initial_sp是堆栈指针，它就是FLASH的0x8000000地址前面4个字节（它根据堆栈大小，由编译器自动生成）
+显然堆和栈是相邻的。
+image
+3）.堆和栈空间分配
+栈：向低地址扩展
+堆：向高地址扩展
+显然如果依次定义变量
+先定义的栈变量的内存地址比后定义的栈变量的内存地址要大
+先定义的堆变量的内存地址比后定义的堆变量的内存地址要小
+4.堆和栈变量
+栈：临时变量，退出该作用域就会自动释放
+堆：malloc变量，通过free函数释放
+另外：堆栈溢出，编译不会提示，需要注意
+-----------------------------------------------------------------------------------------------------
+如果使用了HEAP，则必须设置HEAP大小。 
+如果是STACK，可以设置为0，不影响程序运行。 
+IAR STM8定义STACK,是预先在RAM尾端分配一个字节的区域作为堆栈预留区域。 
+当程序静态变量，全局变量，或者堆与预留堆栈区域有冲突，编译器连接的时候就会报错。 
+你可以吧STACK设置为0,并不影响运行。(会影响调试，调试会报堆栈溢出警告)。 
+其实没必要这么做。 
+一般程序，（在允许范围内）设置多少STACK，并不影响程序真实使用的RAM大小， 
+(可以试验，把STACK设置多少，编译出来的HEX文件都是一样), 
+程序还是按照它原本的状态使用RAM，把STACK设置为0，并不是真实地减少RAM使用。 
+仅仅是欺骗一下编译器，让程序表面上看起来少用了RAM。 
+而设置一定size的STACK，也并不是真的就多使用了RAM，只是让编译器帮你 
+检查一下，是否能够保证有size大小的RAM没有被占用，可以用来作为堆栈。 
+以上仅针对IAR STM8.
+------------------------------------------------------------------------------------------------------
+从以上网摘来看单片机的堆和栈是分配在RAM里的，有可能是内部也有可能是外部，可以读写；
+栈：存函数的临时变量，即局部变量，函数返回时随时有可能被其他函数栈用。所以栈是一种分时轮流使用的存储区，编译器里定义的Stack_Size，是为了限定函数的局部数据活动的范围，操过这么范围有可以跑飞，也就是栈溢出；Stack_Size不影响Hex，更不影响Hex怎么运行的，只是在Debug调试时会提示错。栈溢出也有是超过了国界进行活动，只要老外没有意见，你可以接着玩，有老外不让你玩，你就的得死，或是大家都死（互相撕杀），有的人写单片机代码在函数里定义一个大数组 int buf[8192]，栈要是小于8192是会死的很惨。
+堆：存的是全局变量，这变量理论上是所有函数都可以访问的，全局变量有的有初始值，但这个值不是存在RAM里的，是存在Hex里，下载到Flash里，上电由代码（编译器生成的汇编代码）搬过去的。有的人很“霸道”，上电就霸占已一块很大的RAM（Heap_Size），作为己有(malloc_init)，别人用只能通过他们管家借(malloc)，用完还得换(free)。所以一旦有“霸道”的人出现是编译器里必须定义Heap_Size，否则和他管家借也没有用。
+总之：堆和栈有存在RAM里，他两各分多少看函数需求，但是他两的总值不能超过单片机硬件的实际RAM尺寸，否则只能到海里玩（淹死了）或是自己打造船接着玩(外扩RAM)。
+
+
+25.大端小端模式
+  在C语言中，联合体union的存放顺序是所有成员都从低地址开始存放的。利用这一特点，可以用联合体变量判断ARM或x86环境下，存储系统是是大端还是小端模式。
+  具体的代码如下：
+  #include "stdio.h"
+int main()
+{
+  union w
+ {
+  int a;  //4 bytes
+  char b; //1 byte
+ } c;
+  c.a=1;
+  if (c.b==1)
+  printf("It is Little_endian!/n");
+  else
+  printf("It is Big_endian!/n");
+  return 1;
+}
+
+26.Python
+JSON(JavaScript Object Notation) 是一种轻量级的数据交换格式，易于人阅读和编写。
+pip查看我安装的第三方扩展包的时候，发现pip freeze 和 pip list显示的扩展包不一样，pip freeze 显示出的包要少几个，然而pip freeze --all 和 pip list 显示的是一样的
+
+
+
+
+27.ssh screen
+screen -S window
+screen会话中的任务或程序
+当需要临时离开时（会话中的程序不会关闭，仍在运行）可以用快捷键Ctrl+a d(即按住Ctrl，依次再按a,d)
+screen -ls
+screen -r window
+
+kill -9 window的ID
+screen -wipe
+
+
+28 vim
+vim -On file1 file2 ...使用大写的O参数来垂直分屏。
+vim -on file1 file2 ...使用小写的o参数来水平分屏。
+ctrl+z 后台
+jobs查看后台任务号
+fg 后台任务号
+:q!
+:wq!
+ctrl + w切换窗口
+:sp filename 上下分割，并打开一个新的文件
+:vsp filename 左右分割，并打开一个新的文件
+h或退格: 左移一个字符；
+l或空格: 右移一个字符；
+j: 下移一行；
+k: 上移一行；
+gg: 到文件头部。
+G: 到文件尾部。
+:set number
+:n 移到第n行
+u是撤销
+ctrl+r 是恢复
+/something: 在后面的文本中查找something。
+n: 向后查找下一个。
+N: 向前查找下一个。
+d: 删除（剪切）在可视模式下选中的文本。
+正常模式下按v可以进入可视模式
+y: 复制在可视模式下选中的文本。
+p: 在光标之后粘贴。
+ 
+ 
+29. AMOLED 
+是英文Active-matrix organic light emitting diode的简写，中文全称为“源 矩阵 有机发光二极体”或“主动矩阵有机发光二极体”。其主要构造有三层：AMOLED屏幕、Touch Screen Panel(触控屏面板)和外保护玻璃。
+广色域 屏幕能够显示的色彩更多，其对比度有效提升（是LCD的几百倍），无论是更接近于黑夜的阴影，还是介于蓝绿之间的青色，都可以完美呈现。
+AMOLED是自发光屏幕，由于发光体原理不同，不需要如LCD一般“背负”太多部件。集成触摸技术也让AMO LED显示 屏可以做到更轻薄。
+外可读性与“彩度X亮度”成正比，OLED的彩度远高于LCD，即使在明亮阳光下颜色也可清楚呈现。同时，蓝光的减少以及响应速度的增加，也进一步提高了阅读体验。
+能耗低 AMOLED有更强的柔韧性
+OLED 即有机发光二极管（Organic Light-Emitting Diode）又称为有机电激光 显示 、有机发光半导体（Organic Electroluminescence Display, OLED）。与 液晶显示 （Liquid Crystal Display, LCD ）是不同类型的发光原理。
+
+
+
+30.基带、中频、射频
+“调变技术(Modulation)”与“多任务技术(Multiplex)”
+数码讯号调变技术(ASK、FSK、PSK、QAM)：将模拟的电磁波调变成不同的波形来代表0与1两种不同的数码讯号。ASK用振幅大小来代表0与1、FSK用频率大小来代表0与1、PSK用相位(波形)不同来代表0与1、QAM同时使用振幅大小与相位(波形)不同来代表0与1。
+多任务技术(TDMA、FDMA、CDMA、OFDM)：将电磁波区分给不同的使用者使用。TDMA用时间先后来区分是你的还是我的，FDMA用不同频率来区分是你的还是我的，CDMA用不同密码(正交展频码)来区分是你的还是我的，OFDM用不同正交子载波频率来区分是你的还是我的。
+现在的手机是属于“数码通讯”，也就是我们讲话的声音(连续的模拟讯号)，先由手机转换成不连续的0与1两种数码讯号，再经由数码调变转换成电磁波(模拟讯号载着数码讯号)，最后从天线传送出去。
+
+语音上传(讲电话)：声音由麦克风接收以后为低频模拟讯号，经由低频模拟数码转换器(ADC)转换为数码讯号，经由“基带芯片(BB)”进行资料压缩(Encoding)、加循环式重复检查码(CRC)、频道编码(Channel-coding)、交错置(Inter-leaving)、加密(Ciphering)、格式化(Formatting)，再进行多任务(Multiplexing)、调变(Modulation)等数码讯号处理。接下来经由“中频芯片(IF)”也就是高频数码模拟转换器(DAC)转换为高频模拟讯号(电磁波);最后再经由“射频芯片(RF)”形成不同时间、频率、波形的电磁波由天线传送出去。
+
+语音下载(听电话)：天线将不同时间、频率、波形的电磁波接收进来，经由“射频芯片(RF)”处理后得到高频模拟讯号(电磁波)，再经由“中频芯片(IF)”也就是高频模拟数码转换器(ADC)转换为数码讯号。接下来经由“基带芯片(BB)”进行解调(De-modulation)、解多任务(De-multiplexing)、解格式化(De-formatting)、解密(De-ciphering)、解交错置(De-inter-leaving)、频道解码(Channel-decoding)、解循环式重复检查码(CRC)、资料解压缩(Decoding)等数码讯号处理，最后再经由低频数码模拟转换器(DAC)转换为低频模拟讯号(声音)由麦克风播放出来。
+
+资料通信(上网)：基本上资料通信不论上传或下载都是数码讯号，所以直接进入基带芯片(BB)处理即可。
+
+基带芯片(Baseband，BB)：属于数码集成电路，用来进行数码讯号的压缩/解压缩、频道编码/解码、交错置/解交错置、加密/解密、格式化/解格式化、多任务/解多任务、调变/解调，以及管理通讯协定、控制输入输出界面等运算工作，着名的移动电话基带芯片供应商包括：高通(Qualcomm)、博通(Broadcom)、迈威尔(Marvell)、联发科(MediaTek)等。
+调变器(Modulator)：将基带芯片处理的数码讯号转换成高频模拟讯号(电磁波)，才能传送很远，想要进一步了解通讯原理的人可以参考这里。
+混频器(Mixer)：主要负责频率转换的工作，将调变后的高频模拟讯号(电磁波)转换成所需要的频率，来配合不同通讯系统的频率范围(无线频谱)使用。
+合成器(Synthesizer)：提供无线通讯电磁波与射频集成电路(RF IC)所需要的工作频率，通常经由“相位锁定回路(PLL：Phase Locked Loop)”与“电压控制振荡器(VCO：Voltage Controlled Oscillator)”来提供精准的工作频率。
+带通滤波器(Band Pass Filter，BPF)：只让特定频率范围(频带)的高频模拟讯号(电磁波)通过，将不需要的频率范围滤除，得到我们需要的频率范围(频带)。
+功率放大器(Power Amplifier，PA)：高频模拟讯号(电磁波)传送出去之前，必须先经由功率放大器(PA)放大，增强讯号才能传送到够远的地方。
+传送接收器(Transceiver)：负责传送(Tx：Transmitter)高频模拟讯号(电磁波)到天线，或是由天线接收(Rx：Receiver)高频模拟讯号(电磁波)进来。
+低噪声放大器(Low Noise Amplifier，LNA)：接收讯号时使用，天线接收进来的高频模拟讯号(电磁波)很微弱，必须先经由低噪声放大器(LNA)放大讯号，才能进行处理。
+解调器(Demodulator)：接收讯号时使用，将高频模拟讯号(电磁波)转换成数码讯号，再传送到基带芯片(BB)进行数码讯号处理工作。
+
+所以手机上传(讲电话)的原理是：先由基带芯片(BB)处理数码语音讯号，再经由调变器(Modulator)转换成高频模拟讯号，由混频器(Mixer)转换成所需要的频率，由带通滤波器(BPF)得到特定频率范围(频带)的高频模拟讯号(电磁波)，由功率放大器(PA)增强讯号，最后由传送接收器(Tx)传送到天线输出。相反的，
+手机下载(听电话)的原理是：先由天线传送过来高频模拟讯号(电磁波)，由传送接收器(Rx)接收进来，再经由带通滤波器(BPF)得到特定频率范围(频带)的高频模拟讯号，由低噪声放大器(LNA)将微弱的讯号放大，由混频器(Mixer)转换成所需要的频率，由解调器(Demodulator)转换成数码语音讯号，最后由基带芯片(BB)处理数码语音讯号。
+
+无线通讯系统后端(Back-end)使用基带芯片来处理数码讯号，前端(Front-end)则所使用的集成电路(IC)大致上可以分为“射频芯片”与“中频芯片”两大类，分别使用不同材料的晶圆制作：
+
+中频芯片(Intermediate-Frequency，IF)：又称为“模拟基带(Analog-baseband)”，概念上就是“高频数码模拟转换器(DAC)”与“高频模拟数码转换器(ADC)”，包括：调变器(Modulator)、解调器(Demodulator)，通常还有中频放大器(IF-amplifier)与中频带通滤波器(IF-BPF)等，通常由硅晶圆制作的CMOS 组件组成，可能是数个集成电路，其些可能整合成一个集成电路(IC)。
+
+射频芯片(Radio-Frequency，RF)：又称为“射频集成电路(RFIC)”，是处理高频无线讯号所有芯片的总称，通常包括：传送接收器(Transceiver)、低噪声放大器(LNA)、功率放大器(PA)、带通滤波器(BPF)、合成器(Synthesizer)、混频器(Mixer)等，通常由砷化镓晶圆制作的MESFET、HEMT组件，或硅锗晶圆制作的BiCMOS组件，或硅晶圆制作的CMOS组件组成，目前也有用氮化镓(GaN)制作的功率放大器，可能是数个集成电路，某些可能整合成一个集成电路(IC)。
+
+一、氮化镓器件提供的功率密度比砷化镓器件高十倍。由于氮化镓器件的功率密度较高，因此可以提供更大的带宽、更高的放大器增益，并且由于器件尺寸的减少，还可提高效率。
+二、氮化镓场效应管器件的工作电压比同类砷化镓器件高五倍。由于氮化镓场效应管器件可在更高电压下工作，因此在窄带放大器设计上，设计人员可以更加方便地实施阻抗匹配。所谓 “阻抗匹配”，是指在负载的输入阻抗设计上，使得从器件到负载的功率传输最大化。
+三、氮化镓场效应管器件提供的电流比砷化镓场效应管高二倍。由于氮化镓场效应管器件提供的电流比砷化镓场效应器件高二倍，因此氮化镓场效应器件的本征带宽能力更高。
+四、氮化镓在器件层面的热通量比太阳表面的热通量还要高五倍！“热通量”是单位面积的热量输送率。由于氮化镓是高功率密度器件，因此它在非常狭小的空间内散发热量，形成高热通量。这也是氮化镓器件的热设计如此重要的原因。
+五、碳化硅的导热性是砷化镓的六倍，是硅的三倍。碳化硅具有高导热性，这使它成为高功率密度射频应用的首选衬底。
+六、氮化镓的化学键强度是砷化镓化学键的三倍。因此，氮化镓的能隙更大，能够支持更高的电场和更高的工作电压。
+七、氮化镓—氮化铝镓结构的压电性是砷化镓—砷化铝镓结构的五倍。我们知道压电性在氮化镓中很重要。由于氮化镓—氮化铝镓结构具有较高的压电性，因此电气和物理属性之间是相关的。
+八、碳化硅基氮化镓材料的晶格错位密度约为砷化镓的10,000倍。因此，与同类砷化镓器件相比，栅极电流往往较高，需要电路设计人员的额外注意。
+九、氮化镓—氮化铝的应力是砷化镓—砷化铝的20 倍。由于氮化镓—氮化铝的应变性高于同类砷化镓—砷化铝系统，因此所有层面进行应力分析很重要。
+十、TriQuint 的氮化镓器件在200 摄氏度下工作100 万小时，失效率低于0.002%
+
+
+
+31.LPDDR  
+LPDDR英文全称是Low-Power-Double-Data-Rate的缩写，直译中文含义“低功耗双重数据比率”，专业来说是实现低功耗指定的内存同其他设备的数据交换标准，专门用于手机/平板等移动电子产品中，通俗说的就是低功耗移动内存，原理与PC内存一样，但尺寸形态不同。
+LPDDR4内存频率达到了1600Mhz，而LPDDR3则为800Mhz，显然LPDDR4是前者的2倍，而频率越高，内存的速度相对就更快。LPDDR2则为400Mhz
+LPDDR4带宽为25.6G/s，而LPDDR3则为12.8G/s，LPDDR4带宽相比LPDDR3同样提升了一倍。LPDDR2则为6.4G/s
+LPDDR4工作电压为1.1V，而上一代LPDDR3工作电压为1.2V，从工作电压来看，LPDDR4更低，这意味着其功耗更低。
+LPDDR4X可以看作是LPDDR4的省电优化版本，它在频率、带宽、工作电压与LPDDR4相同，不同的地方仅在于封装上的电源针脚设计和测试规格上有所不同，在功耗方面有所优化。简单来说，LPDDR4X内存就是LPDDR4的省电优化版，功耗大约降低了10-20%，更有利于手机省电。因此，LPDDR4X和LPDDR4内存的区别主要在于封装上的电源针脚设计和测试规格上有所不同，而在制程技术、参数规格基本完全相同。
+
+
+
+32.SSD，eMMC，UFS
+这三种技术都是属于闪存（Flash Memory）的不同种类，区别主要在于控制器，接口标准以及更底层的 Flash 芯片标准。
+SSD 主要作用是取代 PC/服务器 上的 HDD 硬盘，它需要：
+超大容量（百GB~TB级别）
+极高的并行性以提高性能
+对功耗，体积等要求并不敏感
+兼容已有接口技术 （SATA，PCI等）
+而 eMMC 和 UFS主要都是针对移动设备发明的，它们需要：
+适当的容量
+适当的性能
+对功耗 ，体积的要求极其敏感
+仅需遵循一定的接口标准
+
+一个SSD，为了达到高并行高性能的要求，有多个Flash芯片，这样就可以在每个芯片上进行相互独立的读写操作，以并行性来提高硬盘吞吐量，还可以增加冗余备份。而手机中为了节省空间和功耗，通常只有一片密度较高的 Flash 芯片。
+管理一个 Flash 芯片，和管理多个 Flash 芯片，策略肯定是不一样的，因此它们的控制器 （controller）就完全不同了。而且 PC上需要兼容SATA 或PCIe或m2接口，这样你电脑硬盘坏了的时候，可以拔下来换上另一块同样接口的硬盘能照样用。而手机上的Flash芯片大多是直接焊在主板上的，基本上不需要考虑更换的问题，所以只要遵从一个特定标准，能和CPU正常通讯就好了。因此接口的不同也是 SSD 和 eMMC，UFS 的重要区别之一。
+
+eMMC是一个起源较早的技术，全称叫embedded-MultiMedia-Card，为什么单单e是小写呢？因为先有的MMC啊。所谓MMC，大家可能没听过但可能见过，相机中用得较多，和SD卡长得很像。MMC前面加了个embedded，主要就是为了突出现在这个设备是embedded 在电路板上。eMMC 和MMC一样，沿用了8bit 的并行接口。在传输速率不高的时代，这个接口够用了。但随着设备对接口的带宽要求越来越高，想把并行接口速率提高也越来越难。UFS用高速串行接口取代了并行接口，而且还是全双工的，也就是可以读写同时进行。所以相比 eMMC， UFS的理论性能提高不少，甚至可以达到一些SSD的水准。
+
+UFS2.0    2014     读350MB/s    写150MB/s
+eMMC5.1   2015     读250MB/s    写125MB/s
+eMMC5.0   2013     读250MB/s    写90MB/s
+eMMC4.5   2012     读140MB/s    写50MB/s
+UFS2.0闪存读写速度强制标准为HS-G2（High-speed-GEAR2），可选标准为HS-G3。HS-G21Lane最高读写速度为2.9Gbps（约为360MB/s），2Lane最高读写速度为5.8Gbps（约为725MB/s）。可选标准HS-G31Lane最高读写速度为5.8Gbps（约为725MB/s），2Lane最高读写速度为11.6Gbps（约为1.45GB/s）。HS-G2 1Lane由于读写速度与EMMC5.1相比没有明显的优势，相应的商业产品较为罕见。
+2016年3月，JEDEC发布了UFS2.1的闪存存储标准。相比UFS2.0，速度标准没有任何变化，仍然为强制标准HS-G2，可选标准HS-G3。改进主要分为三部分：设备健康（包括预防性维护）、性能优化（包括指令优先和固件升级）和安全保护。
+对于闪存制造商而言，由于UFS2.0已推出HS-G3 2Lane对应的版本，UFS2.1选用更低的标准不再有太多的意义。因此市面上UFS2.1全部采用可选的HS-G3 2Lane标准，即最高读写速率为11.6Gbps。
+
+
+
+33.byobu
+F2                 打开一个新的窗口
+F3                进入前一个窗口
+F4                 进入后一个窗口
+Ctrl+d
+
+F9                打开byobu菜单，查看帮助信息和配置信息
+F12                锁住屏幕
+F6                  断开链接
+想要在byobu中退出一个终端，使用exit或者Ctrl+d即可。
+当你退出了byobu的最后一个终端，相应的你也就退出了byobu，byobu程序关闭并且你回到了常规的终端界面。除此之外，还有其他两种退出byobu的方法：锁住和断开链接。F12锁住进入你的屏幕直到你输入系统密码。断开链接是screen最为强大的特征，同样在byobu中也可以完美工作。你可以断开链接退出屏幕去做其他的事情，然后再重新链接；screen和byobu都可以保存你断开时的状态。例如，你可以在你的写字台上输入，然后断开这个session，回到家，重新链接，继续输入，就像什么都没发生过一样。而且，即使screen和byobu断开，所有从screen和byobu运行的程序仍然继续运行。当screen或byobu处于lock状态（Ctrl+a+x）时，如果其他人关闭了你的终端，它会自动断开链接。按住F6即可断开链接，你又回到了你最开始打开screen或者byobu的界面，你可以继续工作，关闭你之前打开的终端，甚至完全退出screen或byobu。当你想要重新链接时，运行命令screen -r或者byobu -r。你可以断开链接再重新建立链接一个session任意多次。
+更多信息可查询man byobu。
+
+
+
+
+34.宇宙常数
+F=GMm/(r*r) G=6.67408*10负11次方
+光速 299792458 m/s
+普朗克常数 h=6.62606957(29)×10-34 J·s
+
+
+
+
+35.DDR
+SDRAM（Synchronous Dynamic Random Access Memory）：为同步动态随机存取内存，前缀的Synchronous告诉了大家这种内存的特性，也就是同步。1996年底，SDRAM开始在系统中出现，不同于早期的技术，SDRAM是为了与中央处理器的计时同步化所设计，这使得内存控制器能够掌握准备所要求的数据所需的准确时钟周期，因此中央处理器从此不需要延后下一次的数据存取。举例而言，PC66 SDRAM以66 MT/s的传输速率运作；PC100 SDRAM以100 MT/s的传输速率运作；PC133 SDRAM以133 MT/s的传输速率运作，以此类推。
+SDRAM亦可称为SDR SDRAM（Single Data Rate SDRAM），Single Data Rate为单倍数据传输率，SDR SDRAM的核心、I/O、等效频率皆相同，举例而言，PC133规格的内存，其核心、I/O、等效频率都是133MHz。而Single Data Rate意指SDR SDRAM在1个周期内只能读写1次，若需要同时写入与读取，必须等到先前的指令执行完毕，才能接着存取。
+DDR SDRAM（Double Data Rate SDRAM）：为双信道同步动态随机存取内存，是新一代的SDRAM技术。别于SDR（Single Data Rate）单一周期内只能读写1次，DDR的双倍数据传输率指的就是单一周期内可读取或写入2次。在核心频率不变的情况下，传输效率为SDR SDRAM的2倍。第一代DDR内存Prefetch为2bit，是SDR的2倍，运作时I/O会预取2bit的资料。举例而言，此时DDR内存的传输速率约为266～400 MT/s不等，像是DDR 266、DDR 400都是这个时期的产品。
+DDR2 SDRAM（Double Data Rate Two SDRAM）：为双信道两次同步动态随机存取内存。DDR2内存Prefetch又再度提升至4 bit（DDR的两倍），DDR2的I/O频率是DDR的2倍，也就是266、333、400MHz。举例：核心频率同样有133～200MHz的颗粒，I/O频率提升的影响下，此时的DDR2传输速率约为533～800 MT/s不等，也就是常见的DDR2 533、DDR2 800等内存规格。
+DDR3 SDRAM（Double Data Rate Three SDRAM）：为双信道三次同步动态随机存取内存。DDR3内存Prefetch提升至8 bit，即每次会存取8 bits为一组的数据。DDR3传输速率介于 800～1600 MT/s之间。此外，DDR3 的规格要求将电压控制在1.5V，较DDR2的1.8V更为省电。DDR3也新增ASR（Automatic Self-Refresh）、SRT（Self-Refresh Temperature）等两种功能，让内存在休眠时也能够随着温度变化去控制对内存颗粒的充电频率，以确保系统数据的完整性。
+DDR4 SDRAM（Double Data Rate Fourth SDRAM）：DDR4提供比DDR3/ DDR2更低的供电电压1.2V以及更高的带宽，DDR4的传输速率目前可达2133～3200 MT/s。DDR4 新增了4 个Bank Group 数据组的设计，各个Bank Group具备独立启动操作读、写等动作特性，Bank Group 数据组可套用多任务的观念来想象，亦可解释为DDR4 在同一频率工作周期内，至多可以处理4 笔数据，效率明显好过于DDR3。 另外DDR4增加了DBI（Data Bus Inversion）、CRC（Cyclic Redundancy Check）、CA parity等功能，让DDR4内存在更快速与更省电的同时亦能够增强信号的完整性、改善数据传输及储存的可靠性。
+
+
+
+
+36.HDD
+硬盘（英语：Hard Disk Drive，简称HDD）是电脑上使用坚硬的旋转盘片为基础的非易失性存储设备，它在平整的磁性表面存储和检索数字数据，信息通过离磁性表面很近的写头，由电磁流来改变极性方式被电磁流写到磁盘上，信息可以通过相反的方式回读，例如磁场导致线圈中电气的改变或读头经过它的上方。早期的硬盘存储媒介是可替换的，不过今日典型的硬盘是固定的存储媒介，碟片与磁头被封装在机身里（除了一个过滤孔，用来平衡工作时产生的热量导致的气压差）。
+硬盘按数据接口不同，大致分为ATA和SATA（可参阅IDE界面）以及SCSI和SAS。
+ATA全称Advanced Technology Attachment，是用传统的 40-pin 并口数据线连接主板与硬盘的，外部接口速度最大为133Mb/s，因为并口线的抗干扰性太差，且排线占空间，不利计算机散热，将逐渐被 SATA 所取代。
+SATA，全称SerialATA，也就是使用串口的ATA接口，因抗干扰性强，且对数据线的长度要求比ATA低很多，支持热插拔等功能，已越来越为人所接受。SATA-I的外部接口速度已达到150Mb/s，SATA-II达到300Mb/s，SATA-III将达到600Mb/s。SATA的前景很广阔。而SATA的传输线比ATA的细得多, 有利于机壳内的空气流通。
+SCSI，全称为Small Computer SystemInterface（小型机系统接口），历经多世代的发展，从早期的 SCSI-II，到目前的 Ultra320 SCSI 以及Fiber-Channel （光纤通道），接头类型也有多种。SCSI 硬盘广为工作站级个人计算机以及服务器所使用，因为它的转速快，可达 15000 rpm，且数据传输时占用 CPU 运算资源较低，但是单价也比同样容量的 ATA 及 SATA 硬盘昂贵。
+SAS（Serial Attached SCSI）是新一代的SCSI技术，和SATA硬盘相同，都是采取序列式技术以获得更高的传输速度，可达到3Gb/s。此外也透过缩小连接线改善系统内部空间等。
+此外，由于SAS硬盘可以与SATA硬盘共享同样的背板，因此在同一个SAS储存系统中，可以用SATA硬盘来取代部分昂贵的SAS硬盘，节省整体的存储成本。
+
+
+
+
+37.SSD
+目前固态硬盘领域，能见到的不同接口主要有SATA、mSATA、M.2、SATA Express、PCI-E及U.2等，
+SATA 6Gbps接口：
+　　“SATA 6Gbps”其实是SATA Revision 3.0的一个参数标准之一，主要是用来表达使用的是SATA Revision 3.0标准，速度更快，相对SATA Revision 2.0。SATA是硬盘接口的标准规范，实际上SATA6Gbps接口这个说法并不规范，准确的称呼是SATAIII，接口速度是6Gbps而已，只是现在大家习惯这个说法了。SATA6Gbps接口是目前最最常见的HDD/SSD硬盘接口，大部分人现在买的硬盘都在用这种接口。
+　　作为目前应用最多的硬盘接口，SATA6Gbps接口最大的优势就是太成熟了，6Gbps的带宽虽然比起新接口的10Gbps甚至32Gbps带宽差多了，目前主流SSD依然继续使用它们，随着固态硬盘的性能逐渐增强，这些标准已经成为限制SSD的一大瓶颈。
+mSATA接口：
+　　mSATA接口是SATA协会开发的新的mini-SATA(mSATA)接口控制器的产品规范，新的控制器可以让SATA技术整合在小尺寸的装置上。同时mSATA将提供跟SATA接口标准一样的速度和可靠度，提供小尺寸CE产品(如Notebooks/Netbook)的系统开发商和制造商更高效能和符合经济效益的储存方案，比较广泛的运用于超极本、商务本等追求小型化的笔记本电脑中。
+实际上msata接口是SSD小型化的一个重要过程，但是mSATA依然没有摆脱SATA接口的一些缺陷，比如依然是SATA通道，速度也还是6Gbps。
+M.2接口：
+　　M.2原名为NGFF接口，它是为超极本（Ultrabook）量身定做的新一代接口标准，以取代原来基于miniPCIe改良而来的mSATA接口。无论是更小巧的规格尺寸还是更高的传输性能M.2都远胜于mSATA。随着SATA接口瓶颈不断凸显，越来越多的主板厂商也开始在自家产品线上预留M.2接口。
+M.2接口可以同时支持SATA及PCI-E通道，后者更容易提高速度，一开始的M.2接口使用的是PCI-E 2.0 x2通道，理论带宽10Gbps，这也已经突破了SATA接口理论传输瓶颈。现在M.2接口全面转向PCI-E 3.0 x4通道，理论带宽达到了32Gbps，远高于之前水准，大大提升了SSD性能潜力。同时，使用M.2接口固态硬盘还支持NVMe标准，相比目前主流的 AHCI，通过新的NVMe标准接入的SSD，可以获得大幅度的性能提升。
+SLC、MLC和TLC三者的区别 
+SLC=Single-LevelCell，即1bit/cell，速度快寿命长，价格超贵（约MLC3倍以上的价格），约10万次擦写寿命 
+MLC=Multi-LevelCell，即2bit/cell，速度一般寿命一般，价格一般，约3000---10000次擦写寿命 
+TLC=Trinary-LevelCell，即3bit/cell，也有Flash厂家叫8LC，速度相对慢寿命相对短，价格便宜，约500次擦写寿命
+
+
+
+38.安卓编译
+1. make: 不带任何参数则是编译整个系统； 
+make MediaProvider： 单个模块编译，会把该模块及其依赖的其他模块一起编译(会搜索整个源代码来定位MediaProvider模块所使用的Android.mk文件，还要判断该模块依赖的其他模块是否有修改)； 
+2. mmm packages/providers/MediaProvider: 编译指定目录下的模块，但不编译它所依赖的其它模块； 
+3. mm: 编译当前目录下的模块，它和mmm一样，不编译依赖模块; 
+4. mma: 编译当前目录下的模块及其依赖项 mmm和mm命令必须在执行“.build/envsetup.sh”之后才能使用，并且只编译发生变化的文件。如果要编译模块的所有文件，需要-B选项，例如mm  -B
+
+
+
+39. 强周期性行业
+强周期性行业，通常都会有这么几个特点：1. 产品标准化程度高，用户粘性弱，谁的便宜买谁的；2. 行业具备规模效应，大规模生产能够有效摊低成本；3. 重资产，折旧巨大，一旦投产没法停，亏本也要硬着头皮生产，起码还有现金流； 4. 行业格局尚不稳定，没有价格同盟，涨价时厂商都想疯狂扩产搞死对手，低谷时通过破产兼并来实现去产能。内存符合上述全部特点。
+
+内存的正式名字叫做“存储器”，是半导体行业三大支柱之一。2016年全球半导体市场规模为3400亿美金，存储器就占了768亿美元。对于你身边的手机、平板、PC、笔记本等所有电子产品来说，存储器就类似于钢铁之于现代工业，是名副其实的电子行业“原材料”。如果再将存储器细分，又可分为DRAM、NAND Flash和Nor Flash三种，其中DRAM主要用来做PC机内存（如DDR）和手机内存（如LPDDR），两者各占三成，尔必达做的，就是DRAM。
+
+DRAM领域经过几十年的周期循环，玩家从80年代的40~50家，逐渐减少到了2008年金融危机之前的五家，分别是：三星（韩）、SK海力士（韩）、奇梦达（德）、镁光（美）和尔必达（日），五家公司基本控制了全球DRAM供给，终端产品厂商如金士顿，几乎没有DRAM生产能力，都要向它们采购原材料。按照常理来说，格局已经趋稳，价格战理应偃旗息鼓，可惜的是，韩国人并不答应，尤其是三星。
+
+三星充分利用了存储器行业的强周期特点，依靠政府的输血，在价格下跌、生产过剩、其他企业削减投资的时候，逆势疯狂扩产，通过大规模生产进一步下杀产品价格，从而逼竞争对手退出市场甚至直接破产，世人称之为“反周期定律”。在存储器这个领域，三星一共祭出过三次“反周期定律”，前两次分别发生在80年代中期和90年代初，让三星从零开始，做到了存储器老大的位置。但三星显然觉得玩的还不够大，于是在2008年金融危机前后，第三次举起了“反周期”屠刀。
+
+2007 年初，微软推出了狂吃内存的Vista操作系统，DRAM厂商判断内存需求会大增，于是纷纷上产能，结果Vista 销量不及预期，DRAM 供过于求价格狂跌，加上2008 年金融危机的雪上加霜，DRAM 颗粒价格从2.25 美金雪崩至0.31 美金。就在此时，三星做出令人瞠目结舌的动作：将2007 年三星电子总利润的118%投入DRAM 扩张业务，故意加剧行业亏损，给艰难度日的对手们，加上最后一根稻草。
+
+效果是显著的。DRAM价格一路飞流直下，2008年中跌破了现金成本，2008年底更是跌破了材料成本。2009年初，第三名德系厂商奇梦达首先撑不住，宣布破产，欧洲大陆的内存玩家就此消失。2012年初，第五名尔必达宣布破产，曾经占据DRAM市场50%以上份额的日本，也输掉了最后一张牌。在尔必达宣布破产当晚，京畿道的三星总部彻夜通明，次日股价大涨，全世界都知道韩国人这次又赢了。
+
+至此，DRAM领域最终只剩三个玩家：三星、海力士和镁光。尔必达破产后的烂摊子，在2013年被换了新CEO的镁光以20多亿美金的价格打包收走。20亿美金实在是个跳楼价，5年之后，镁光市值从不到100亿美元涨到460亿，20亿美元差不多是它市值一天的振幅。
+
+2012年初尔必达破产之后，DRAM颗粒价格并没有马上涨起来，而是继续盘整到了下半年，之后价格才开始飙升。到了2013年10月份，DRAM价格已经比尔必达破产时的价格整整高了一倍。三家寡头在2013-14年过了两年好日子，在15年又开始重新一波扩产，造成了短暂的供过于求，DRAM价格又开始了一轮下跌，一直跌倒2016年年中，但这次下跌，对三个寡头来说，远远没到伤筋动骨的地步。
+
+2016年下半年，新投放的产能已经消化的差不多，而市场的需求还在快速增长。DRAM产能之前有三成供给手机，而随着手机厂商在内存上打起了“军备竞赛”，接近60%的DRAM产能被手机吃掉，尤其到了手机备货旺季的三季度，DRAM全面缺货，价格不断跳涨，PC用的内存条也就跟着水涨船高，摇身变成了“理财产品”。
+
+除了DRAM之外，存储器另外一个领域NAND Flash，也面临类似的情况。NAND Flash市场的玩家，有三星、东芝/闪迪、美光、SK 海力士，四家总共占市场99%份额。相比DRAM市场，多了一个东芝/闪迪。NAND Flash主要用在两个领域，一个是手机的闪存，另外一个是固态硬盘SSD，这两个领域，都是飞速增长的领域，带动NAND价格也一路飙升。
+
+存储器主要战场还是在DRAM和NAND上，而这两个领域的格局已经很稳固，三星、镁光、海力士，外加一个四处卖身的东芝。三星要想再通过“反周期定律”消灭对手，已经很难了，既然无法消灭对手，自损八百的自杀式冲锋就不会再重现。最大的可能是：存储器价格随着供给/需求的变化而进行短周期波动，但行业将长期维持暴利状态。
+
+针对火热的行情以及大陆资本的进入，三星海力士镁光已经启动了新一轮的扩产，在这一轮暴涨中，这些公司也储备了足够多的粮草和弹药，来欢迎新的玩家的进入。可以预见的是，大陆存储器项目达产之日，就是内存再次杀到现金成本甚至材料成本的日子，这个时间可能会是在2019年左右。
+
+
+
+
+40. intel主板芯片组
+芯片组是构成主板电路的核心。一定意义上讲，它决定了主板的级别和档次。它就是"南桥"和"北桥"的统称，就是把以前复杂的电路和元件最大限度地集成在几颗芯片内的芯片组。而Intel芯片组是专门为英特尔的处理器设计的，用来连接CPU与其他的设备如内存、显卡等。如果说中央处理器(CPU)是整个电脑系统的大脑，那么芯片组将是整个身体的心脏。对于主板而言，芯片组几乎决定了这块主板的功能，进而影响到整个电脑系统性能的发挥，芯片组是主板的灵魂。芯片组性能的优劣，决定了主板性能的发挥。
+
+
+
+
+
+41. BLE
+蓝牙1.1~5.0不同版本特性简介
+1）、版本1.1：
+传输率约在748~810kb/s，因是早期设计，容易受到同频率之间的类似通信产品干扰，影响通讯质量。这个初始版本支持Stereo音效的传输要求，但只能够以（单工）方式工作，加上带宽频率响应等指标不理想，并未算是最好的Stereo传输工具。
+
+2）、版本1.2：
+同样是只有748~810kb/s的传输率，但增加了(改善Software)抗干扰跳频功能。(太深入的技术理论不再详述!)。支持Stereo音效的传输要求，但只能够作（单工）方式工作，加上带宽频率响应还是不理想，也不能作为立体声（Stereo）传输工具。
+
+3）、版本2.0：
+2.0是1.2的改良提升版，传输率约在1.8M/s~2.1M/s，可以有（双工）的工作方式。即一边作语音通讯，同时亦可以传输档案/高质素图片，2.0版本当然也支持Stereo运作。
+随后蓝牙2.0版本的芯片，增加了Stereo译码芯片，则连A2DP（AdvancedAudioDistributionProfile）也可以不需要了。
+
+4）、版本2.1：
+为了改善蓝牙技术存在的问题，蓝牙SIG组织（SpecialInterestGroup）推出了Bluetooth2.1+EDR版本的蓝牙技术。改善装置配对流程：以往在连接过程中，需要利用个人识别码来确保连接的安全性，而改进过后的连接方式则是会自动使用数字密码来进行配对与连接，举例来说，只要在手机选项中选择连接特定装置，在确定之后，手机会自动列出当前环境中可使用的设备，并且自动进行连结；而短距离的配对方面：也具备了在两个支持蓝牙的手机之间互相进行配对与通讯传输的NFC（NearFieldCoMMunicatin）机制；更佳的省电效果：蓝牙2.1版加入了SniffSubrating的功能，透过设定在2个装置之间互相确认讯号的发送间隔来达到节省功耗的目的。蓝牙2.1将装置之间相互确认的讯号发送时间间隔从旧版的0.1秒延长到0.5秒左右，如此可以让蓝牙芯片的工作负载大幅降低，也可让蓝牙可以有更多的时间可以彻底休眠。根据官方的报告，采用此技术之后，蓝牙装置在开启蓝牙联机之后的待机时间可以有效延长5倍以上，开始支持全双工通信模式。
+
+5）、版本3.0+HS：
+2009年4月21日，蓝牙技术联盟(BluetoothSIG)正式颁布了新一代标准规范"BluetoothCoreSpecificationVersion3.0HighSpeed"(蓝牙核心规范3.0版高速)，蓝牙3.0的核心是"GenericAlternateMAC/PHY"(AMP)，这是一种全新的交替射频技术，允许蓝牙协议栈针对任一任务动态地选择正确射频。最初被期望用于新规范的技术包括802.11以及UMB，但是新规范中取消了UMB的应用。作为新版规范，蓝牙3.0的传输速度自然会更高，而秘密就在802.11无线协议上。通过集成"802.11PAL"(协议适应层)，蓝牙3.0的数据传输率提高到了大约24Mbps(即可在需要的时候调用802.11WI-FI用于实现高速数据传输)。，是蓝牙2.0的八倍，可以轻松用于录像机至高清电视、PC至PMP、UMPC至打印机之间的资料传输。功耗方面，通过蓝牙3.0高速传送大量数据自然会消耗更多能量，但由于引入了增强电源控制(EPC)机制，再辅以802.11，实际空闲功耗会明显降低，蓝牙设备的待机耗电问题有望得到初步解决。此外，新的规范还具备通用测试方法(GTM)和单向广播无连接数据(UCD)两项技术，并且包括了一组HCI指令以获取密钥长度。据称，配备了蓝牙2.1模块的PC理论上可以通过升级固件让蓝牙2.1设备也支持蓝牙3.0。联盟成员已经开始为设备制造商研发蓝牙3.0解决方案。
+
+6）. 蓝牙4.0
+6.1 简介:
+蓝牙4.0为蓝牙3.0的升级标准蓝牙4.0最重要的特性是省电，极低的运行和待机功耗可以使一粒纽扣电池连续工作数年之久。此外，低成本和跨厂商互操作性，3毫秒低延迟、AES-128加密等诸多特色，可以用于计步器、心律监视器、智能仪表、传感器物联网等众多领域，大大扩展蓝牙技术的应用范围。
+6.2 主要特点：
+蓝牙4.0是蓝牙3.0+HS规范的补充，专门面向对成本和功耗都有较高要求的无线方案，可广泛用于卫生保健、体育健身、家庭娱乐、安全保障等诸多领域。它支持两种部署方式：双模式和单模式。双模式中，低功耗蓝牙功能集成在现有的经典蓝牙控制器中，或再在现有经典蓝牙技术(2.1+EDR/3.0+HS)芯片上增加低功耗堆栈，整体架构基本不变，因此成本增加有限。Single mode只能与BT4.0互相传输无法向下兼容（与3.0/2.1/2.0无法相通）;Dual mode可以向下兼容可与BT4.0传输也可以跟3.0/2.1/2.0传输。
+单模式面向高度集成、紧凑的设备，使用一个轻量级连接层(LinkLayer)提供超低功耗的待机模式操作、简单设备恢复和可靠的点对多点数据传输，还能让联网传感器在蓝牙传输中安排好低功耗蓝牙流量的次序，同时还有高级节能和安全加密连接。
+6.3 优点
+蓝牙4.0将三种规格集一体，包括传统蓝牙技术、高速技术和低耗能技术，与3.0版本相比最大的不同就是低功耗。4.0版本的功耗较老版本降低了90%，更省电，随着蓝牙技术由手机、游戏、耳机、便携电脑和汽车等传统应用领域向物联网、医疗等新领域的扩展，对低功耗的要求会越来越高。4.0版本强化了蓝牙在数据传输上的低功耗性能。
+
+7）.蓝牙4.1
+7.1 简介
+如果说蓝牙 4.0主打的是省电特性的话，那么此次升级蓝牙4.1的关键词应当是IOT（全联网），也就是把所有设备都联网的意思。为了实现这一点，对通讯功能的改
+进是蓝牙 4.1最为重要的改进之一。
+7.2 主要特点
+1）批量数据的传输速度
+首当其冲的就是批量数据的传输速度，大家知道蓝牙的传输速率一直非常渣，与已经跨入千兆的WiFi相比毫无可比性。所以蓝牙4.1在已经被广泛使用的蓝牙4.0 LE
+基础上进行了升级，使得批量数据可以以更高的速率传输。当然这并不意味着可以用蓝牙高速传输流媒体视频，这一改进的主要针对的还是刚刚兴起的可穿戴设备。
+例如已经比较常见的健康手环，其发送出的数据流并不大，通过蓝牙4.1能够更快速地将跑步、游泳、骑车过程中收集到的信息传输到手机等设备上，用户就能更好
+地实时监控运动的状况，这是很有用处的。在蓝牙4.0时代，所有采用了蓝牙4.0LE的设备都被贴上了“BluetoothSmart”和“BluetoothSmartReady”的标志。其中Bluetooth SmartReady设备指的是PC、平板、手机这样的连接中心设备，而BluetoothSmart设备指的是蓝牙耳机、键鼠等扩展设备。之前这些设备之间的角色是早就安排好了的，并不能进行角色互换，只能进行1对1连接。而在蓝牙4.1技术中，就允许设备同时充当“BluetoothSmart”和“BluetoothSmartReady”两个角色的功能，这就意味着能够让多款设备连接到一个蓝牙设备上。举个例子，一个智能手表既可以作为中心枢纽，接收从健康手环上收集的运动信息的同时，又能作为一个显示设备，显示来自智能手机上的邮
+件、短信。借助蓝牙4.1技术智能手表、智能眼镜等设备就能成为真正的中心枢纽。
+2）通过IPV6连接到网络
+除此之外，可穿戴设备上网不易的问题，也可以通过蓝牙4.1进行解决。新标准加入了专用通道允许设备通过 IPv6 联机使用。举例来说，如果有蓝牙设备无法上网
+，那么通过蓝牙4.1连接到可以上网的设备之后，该设备就可以直接利用IPv6连接到网络，实现与WiFi相同的功能。尽管受传输速率的限制，该设备的上网应用有限
+，不过同步资料、收发邮件之类的操作还是完全可以实现的。这个改进的好处在于传感器、嵌入式设备只需蓝牙便可实现连接手机、连接互联网，相对而言WiFi多用
+于连接互联网，在连接设备方面效果一般，无法做到蓝牙的功能。未来随着物联网逐渐走进我们的生活，无线传输在日常生活中的地位也会越来越高，蓝牙作为普及
+最广泛的传输方式，将在“物联网”中起到不可忽视的作用。不过，蓝牙完全适应IPv6则需要更长的时间，所以就要看芯片厂商如何帮助蓝牙设备增加IPv6的兼容性了
+
+3）简化设备连接
+　　在各大手机厂商以及PC厂商的推动下，几乎所有的移动设备和笔记本电脑中都装有蓝牙的模块，用户对于蓝牙的使用也比较多。不过仍有大量用户觉得蓝牙使用
+起来很麻烦，归根结底还是蓝牙设备较为复杂的配对、连接造成的。试想一下，如果与手机连接的智能手表，每次断开连接后，都得在设置界面中手动选择一次才能
+重新连接，这就非常麻烦了。之前解决这一问题的方法是厂商在两个蓝牙设备中都加入NFC芯片，通过NFC近场通讯的方式来简化重新配对的步骤，这本是个不错的思
+路。只是搭载NFC芯片的产品不仅数量少，而且价格偏高，非常小众。
+蓝牙4.1针对这点进行了改进，对于设备之间的连接和重新连接进行了很大幅度的修改，可以为厂商在设计时提供更多的设计权限，包括设定频段创建或保持蓝牙连
+接，这以改变使得蓝牙设备连接的灵活性有了非常明显的提升。两款带有蓝牙4.1的设备之前已经成功配对，重新连接时只要将这两款设备靠近，即可实现重新连接
+，完全不需要任何手动操作。举个例子，以后使用蓝牙4.1的耳机时，只要打开电源开关就行了，不需要在手机上进行操作，非常的简单。
+
+4）与4G和平共处
+在移动通信领域，近期最火的话题莫过于4G了，已经成为全球无线通信网络一个不可逆转的发展趋势。而蓝牙4.1也专门针对4G进行了优化，确保可以与4G信号和平
+共处，这个改进被蓝牙技术联盟称为“共存性”。可能大家会觉得疑惑，手机网络信号和蓝牙不是早就共存了么，为什么蓝牙4.1还要特别针对这点改进呢？这是因
+为在实际的应用中，如果这两者同时传输数据，那么蓝牙通信就可能受到手机网络信号的干扰，导致传输速率的下降。因此在全新的蓝牙4.1标准中，一旦遇到蓝牙
+4.1和4G网络同时在传输数据的情况，那么蓝牙4.1就会自动协调两者的传输信息，从而减少其它信号对蓝牙4.1的干扰，用户也就不用担心传输速率下降的问题了。
+
+5）蓝牙4.1提供的增强功能包括：   
+AES加密技术提供更安全的连接。该功能使无线耳机更加适用于政府、医疗及银行等安全至上的应用领域。可通过专属BluetoothSmart远程遥控器操控耳机、扬声器及条形音箱，并支持同步播放源于另一个完全不同设备的音频流。
+
+
+8）蓝牙4.2标准
+　　2014年12月4日，蓝牙4.2标准颁布，改善了数据传输速度和隐私保护程度，可直接通过IPv6和6LoWPAN接入互联网。在新的标准下蓝牙信号想要连接或者追踪用户设备必须经过用户许可，否则蓝牙信号将无法连接和追踪用户设备。
+　　速度方面变得更加快速，两部蓝牙设备之间的数据传输速度提高了2.5倍，因为蓝牙智能（BluetoothSmart）数据包的容量提高，其可容纳的数据量相当于此前的10倍左右。
+
+
+9）蓝牙5.0协议
+于美国时间2016年6月16日在伦敦正式发布,为现阶段最高级的蓝牙协议标准。
+
+1、更快的传输速度
+蓝牙5.0的开发人员称，新版本的蓝牙传输速度上限为2Mbps，是之前4.2LE版本的两倍。当然实际生活中是不太可能达到这个极限速度，但仍然可以体验到显著的速度提升。
+
+2、更远的有效距离
+蓝牙5.0的另外一个重要改进是，它的有效距离是上一版本的4倍，因此在理论上，当你拿着手机站在距离蓝牙音箱300米的地方，它还是会继续放着你爱的歌。也就
+是说，理论上，蓝牙发射和接收设备之间的有效工作距离可达300米。当然，实际的有效距离还取决于你使用的电子设备。
+
+3、导航功能
+此外，蓝牙5.0将添加更多的导航功能，因此该技术可以作为室内导航信标或类似定位设备使用，结合wifi可以实现精度小于1米的室内定位。举个例子，如果你是路痴，你仍可以使用蓝牙技术，在诺大的商业中心找到路。
+
+4、物联网功能
+物联网还在持续火爆，因此，蓝牙5.0针对物联网进行了很多底层优化，力求以更低的功耗和更高的性能为智能家居服务。
+
+5、升级硬件
+此前的一些蓝牙版本更新只要求升级软件，但蓝牙5.0很可能要求升级到新的芯片。不过，旧的硬件仍可以兼容蓝牙5.0，你就无法享用其新的性能了。搭载蓝牙5.0
+芯片的旗舰级手机将于2017年问世，相信中低端手机也将陆陆续续内置蓝牙5芯片。苹果将为成为第一批使用该项技术的厂商之一。
+
+6、更多的传输功能
+全新的蓝牙5.0能够增加更多的数据传输功能，硬件厂商可以通过蓝牙5.0创建更复杂的连接系统，比如Beacon或位置服务。因此通过蓝牙设备发送的广告数据可以发
+送少量信息到目标设备中，甚至无需配对。
+
+7、更低的功耗
+众所周知，蓝牙是智能手机的必备功能，随着智能设备和移动支付等越来越多需要打开蓝牙，才能享受便利功能逐渐融入人们的生活之中，蓝牙的功耗成为了智能手
+机待机时间的一大杀手。为此蓝牙5.0将大大降低了蓝牙的功耗，使人们在使用蓝牙的过程中再也不必担心待机时间短的问题。
+
+8、真正支持无损传输
+支持24bit/192KHz的无损音源传输，对现有的WIFI高保真无损音频传输形成有效威胁。
+
+
+
+
+
+
+42.正则表达式
+ {1,9}\r\n查找n个空格加换行
+ 
+ 
+
+43.wifi
+首先802.11 是一种无线局域网标准。 
+802.11 a/b/g/n/ac 都是由802.11 发展而来的。不同的后缀代表着不同的物理层标准工作频段和不同的传输速率，也就是说它们的物理层和传输速度不同。
+
+协议	频率	信号	最大传输速率
+802.11	2.4Ghz	FHSS 或 DSSS	2Mps
+802.11a	5GHz	OFDM	54Mps
+802.11b	2.4GHz	HR-DSSS	11Mps
+802.11g	2.4GHz	OFDM	54Mps
+802.11n	2.4GHz或5GHz	OFDM	540Mps
+802.11ac	2.4GHz或5GHz		400M 2.4GHz，900M 5GHz
+802.11b和802.11g工作在同一频段上，g能够兼容b，也就是说支持g的网卡都能支持b。
+
+802.11n协议为双频工作模式（包含2.4GHz和5GHz两个工作频段）。这样11n保障了与以往的802.11a b, g标准兼容。
+
+新一代wifi标准802.11 ac是从802.11 n上发展而来的，有着比802.11 n更高的速度。
+
+现在市面是说的双频路由器即支持2.4G和5G的路由器。
+
+为什么要用5G？ 
+2.4GHz无线技术是一种短距离无线线传输技术，并且它是一种全世界公开通用使用的无线频段。并且使用这个频段不会受到限制，全球各种无线产品均可以使用这个频段。正是由于这种特性，目前大部分无线路由器等无线产品都在这个频段上工作。它的整体频宽由于其它无线频段，使得整体数据传输速率得到了提高，并且它的传输距离较远。随着技术的发展，各厂商可以将2.4GHz的无线产品制作的更加小巧，并且减少耗电。
+
+说到干扰问题，无线网络这条信息高速公路已经变得拥挤不堪。在2.4GHz频段下工作的互相不干扰的信道只有3个，“堵车”现象非常的严重，让人非常头疼。而在5GHz频段，工作的互不干扰信道则有22个，大大超过了2.4GHz的互不干扰信道数量。
+
+相比于11n无线技术，11ac的每个通道的工作频宽20/40MHz提高到了80/160MHz,这样一来就大大提高了无线网络的传输速率。而特别值得一提的是，802.11ac还支持MU-MIMO，也就是多用户（multi-user）MIMO。802.11n技术支持的MIMO只能是单用户MIMO，即无论是3条流还是2条流，AP和所有STA之间都只能用3条流或者2条流通信。而如果支持了MU-MIMO，那么意味着一个3条流AP可以同时和3个STA分别以1条流的方式通信，而且不会彼此干扰。这将大幅提高多用户同时接入AP时的吞吐性能。
+
+压控振荡器 指输出频率与输入控制电压有对应关系的振荡电路(VCO)，频率是输入信号电压的函数的振荡器VCO，振荡器的工作状态或振荡回路的元件参数受输入控制电压的控制，就可构成一个压控振荡器。
+
+平衡-不平衡转换器俗称巴伦（balun），是一种单端与双端的转换器，这里所说的单端就是楼主所说的不平衡端，双端就是平衡端。双端（平衡端）一般用来传输差分信号，差分信号能很好的抑制干扰，这是大家都知道的，那为什么还要使用单端呢？高频器件不同于数字芯片，实际应用中还要经过细致的调试，如果使用差分的话会对调试带来很多不便（市面上很多的仪器都是使用单端连接的），况且，阻抗匹配时单端更省事，双端的话两端都用匹配，因而市面上很多的高频器件都是使用单端的。
+
+为了同其他级相连接，常常需要把不平衡放大器的输出信号转换成平衡信号，所以就要用平衡-不平衡转换器把平衡线或电路转换成不平衡线或电路。反过来也是可行的，平衡-不平衡转换器也能把不平衡状态转换成平衡状态。使用时，可能会要求阻抗相匹配。
+  
+平衡级的输入或输出端口有两根并联的导线组成输入线，一根传输0°信号，另一根传输的信号幅度与前者相等，相位相差180°。同样大小的电流在两根导线中方向相反地流过。但是，如果必须把平衡源转换成不平衡源，就需要把两个不同的信号同相相加，从而输出不平衡信号。在不平衡的端口上，电流只流过一根导线，另一根导线接地，这是当今RF设计中的主要技术。
+也就是说平衡端描述的是两根信号线，而不平衡端描述的则是导线与地线/地平面。或者可以这样认为：平衡端以信号线作为回流路径，而不平衡端的回流路径则为地。
+
+低噪声放大器(Low Noise Amplifier) -------------LNA
+功率放大器(Power Amplifier)---------------------PA
+LNA是低噪声放大器，主要用于接收电路设计中。因为接收电路中的信噪比通常是很低的，往往信号远小于噪声，通过放大器的时候，信号和噪声一起被放大的话非常不利于后续处理，这就要求放大器能够抑制噪声。PA（功放）主要功能是功率放大，以满足系统要求，最重要的指标就是输出功率大小，其次线性如何等等，一般用在发射机的最后一级。
+LNA用在接收机由于对噪声要求很严格，所以其bias较低，这样就能实现很小的NF和很高的效率，但同时会导致线性区增益较低，最大输入功率不是很高（也可以说1dB压缩点吧）。PA主要是考虑高的线性区和高增益，其bias很高，这样也会造成PA效率降低。
+所以呢，你会看到，LNA在放大信号的时候基本上电流很小，一方面是因为信号小，另一方面就是其效率高bias低。要知道，电流大的话NF会变差。PA的话，动不动30dB左右的gain，接近30dBm的max ouput power，可是线性度还是很好，用个bias很高的A类放大器，效率在30%左右，电流很大，不过它不管NF，反正Tx信号很强，来点noise的话根本影响不到信噪比。
+
+根据信号论原理，若有其他衰减程度的原发送信号副本提供给接收机，则有助于接收信号的正确判决。这种通过提供传送信号多个副本来提高接收信号正确判决率的方法被称为分集。分集技术是用来补偿衰落信道损耗的，它通常利用无线传播环境中同一信号的独立样本之间不相关的特点，使用一定的信号合并技术改善接收信号，来抵抗衰落引起的不良影响。空间分集手段可以克服空间选择性衰落，但是分集接收机之间的距离要满足大于3倍波长的基本条件。
+
+MSDU(MAC Service Data Unit): MAC服务数据单元。
+MPDU(MAC Protocol Data Unit):  MAC协议数据单元。 
+在无线网络安全中，MSDU是Ethernet报文，经过添加完整性校验MIC、分帧、省电模 式下报文缓存、加密、序列号赋值、CRC校验、MAC头之后成为MPDU，MPDU就是 指的经过802.11协议封装过的数据帧。
+
+MIMO(Multiple-Input Multiple-Output)技术指在发射端和接收端分别使用多个发射天线和接收天线，使信号通过发射端与接收端的多个天线传送和接收，从而改善通信质量。它能充分利用空间资源，通过多个天线实现多发多收，在不增加频谱资源和天线发射功率的情况下，可以成倍的提高系统信道容量，显示出明显的优势、被视为下一代移动通信的核心技术。
+
+当天线的数目一定时，空时格码(STTC)的译码复杂度与天线的个数和数据速率成指数增长。为了解决译码复杂度的问题，Cadence公司的Alamouti首先提出了一种使用两个发送天线的传输方法，采用两个发送天线和一个接收天线，这种算法的性能与采用最大比合并算法(一个发送天线，两个接收天线)的性能是相同的。
+空时编码大致上有三种方式 ：
+空时网格码（STTC）
+空时块编码（STBC）
+空时分层码（LSTC）
+（1）空时网格码（STTC）：空时网格码最早是由V.Tarokh等人提出的，该空时编码系统中，在接收端解码采用维特比译码算法。空时网格码设计的码子在不损失带宽效率的前提下，可提供最大的编码增益和分集增益。最大分集增益等于发射天线数。
+（2）空时分组码（STBC）：空时网格码虽然能获得很大的编码增益和分集增益，但是由于在接收端采用维特比译码，其译码复杂度随着天线数和网格码状态数的增加成指数增加，因此在实际中应用有些困难。这就有了空时分组编码的出现。
+空时分组码则是根据码子的正交设计原理来构造空时码子 ，空时分组码最早由Alamouti提出的。其设计原则就是要求设计出来的码子各行各列之间满足正交性。 接收时采用最大似然检测算法进行解码，由于码子之间的正交性，在接收端只需做简单的线性处理即可。
+（3）分层空时码（LSTC）：分层空时码最早是由贝尔实验室提出的一种MIMO系统的空时编码技术，即BLAST系统 。分层空时码有两种形式，对角分层空时码D-BLAST和垂直分层空时码V-BLAST。 V-BLAST系统处理起来较D-BLAST系统要简单。
+
+dBm是一个表示功率绝对值的值（也可以认为是以1mW功率为基准的一个比值），
+计算公式为：dBm=10log（功率值/1mw）
+         wW=power(10,dBm/10)
+  W=(power(10,dBm/10))/1000
+
+一、粗略计算方法
+　　这里将dBm转换为W的口算规律是要先记住“1个基准”和“2个原则”：
+“1个基准”：30dBm＝1W
+“2个原则”：1)＋3dBm，功率乘2倍；－3dBm，功率乘1/2| 
+举例：33dBm＝30dBm+3dBm＝1W×2=2W
+　　　27dBm＝30dBm－3dBm＝1W×1/2=0.5W
+2)＋10dBm，功率乘10倍；－10dBm，功率乘1/10
+　　举例：40dBm＝30dBm+10dBm＝1W×10=10W
+　　　　　20dBm＝30dBm－10dBm＝1W×0.1=0.1W
+以上可以简单的记作：30是基准，等于1W整，互换不算难，口算可完成。加3乘以2，加10乘以10；减3除以2，减10除以10。
+　　几乎所有整数的dBm都可用以上的“1个基准”和“2个原则”转换为W。
+例1：44dBm=?W
+　　44dBm=30dBm+10dBm+10dBm－3dBm－3dBm
+　　　　　=1W×10×10×1/2×1/2
+　　　　　=25W
+例2：32dBm=?
+32dBm=30dBm+3dBm+3dBm+3dBm+3dBm-10dBm
+　　　　　　　=1W×2×2×2×2×0.1
+　　　　　　　=1.6W
+　　计算技巧：+1dBm和+2dBm的计算技巧
++1dBm=+10dBm－3dBm－3dBm－3dBm
+         =X×10×1/2×1/2×1/2
+         =X×1.25
++2dBm=－10dBm+3dBm+3dBm+3dBm+3dBmw
+         =X×0.1×2×2×2×2
+         =X×1.6
+一般来讲，在工程中，dBm和dBm（或dBw和dBw）之间只有加减，没有乘除。而用得最多的是减法：dBm减 dBm 实际上是两个功率相除，信号功率和噪声功率相除就是信噪比（SNR）。dBm加dBm 实际上是两个功率相乘。
+
+接收灵敏度就是接收机能够正确地把有用信号拿出来的最小信号接收功率。
+无线传输的接收灵敏度类似于人们沟通交谈时的听力，提高信号的接收灵敏度可使无线产品具有更强地捕获弱信号的能力。这样，随着传输距离的增加，接收信号变弱，高灵敏度的无线产品仍可以接收数据，维持稳定连接，大幅提高传输距离。普通11g产品的接收灵敏度一般为-85dBm，目前市面上的无线产品接收灵敏度最高可达-105dBm，比普通产品提高了20dB。而专业的接收机的接收灵敏度可以达到-120dBm。每增加3dB，接收灵敏度提高一倍。
+
+PCB板载天线、陶瓷贴片天线、 IPEX接口天线、外置天线
+⑴ On Board板载式:采用PCB蚀刻一体成型，性能受限，极低成本，应用于蓝牙、WIFI模组集成；
+
+⑵ SMT贴装式:材质有陶瓷、金属片、PCB,性能成本适中，适用于大批量的嵌入式射频模组；
+
+⑶ IPX外接式：使用PCB或FPC+Cable的组合，性能优秀，成本适中，广泛应用于OTT、终端设备；
+
+⑷ External外置类：塑胶棒状天线，高性能，独立性,成本高，应用于终端设备，无须考虑EMC等问题；
+
+FCC/CE/SRRC/IC/VCCI
+FCC认证即是由FCC（Federal Communications Commission，美国联邦通信委员会）于1934年由COMMUNICATIONACT建立是美国政府的一个独立机构，直接对国会负责。FCC通过控制无线电广播、电视、电信、卫星和电缆来协调国内和国际的通信。是出口美国要做的认证。分符合性声明和ID认证两类
+
+CE认证是出口欧洲要做的认证。不同的产品需要不同指令的认证，涉及产品范围很广，有机械MD，医疗器械MDD，压力容器PED。电气LVD,EMC等等
+
+SRRC是国家无线电管理委员会强制认证要求，自 1999 年 6 月 1 日起，中国信息产业部 (Ministry of Information Industry, MII) 强制规定，所有在中国境内销售及使用的无线电组件产品，必须取得无线电型号的核准认证 (Radio Type Approval Certification)。
+
+IC是加拿大工业部Industry Canada的简称，作为政府机构, 负责电子电器产品进入加拿大市场的认证事务。其负责产品大致分为：广播电视设备，信息技术设备，无线电设备，电信设备，工科医设备等。
+
+日本志愿干扰控制委员会（ VCCI--Voluntary Control Council for Interference by Information Technology Equipment ）电磁兼容认证 VCCI 是日本的电磁兼容认证标志。 VCCI 认证是非强制性的，但是在日本销售的信息技术产品，一般会被要求进行 VCCI 认证。制造商首先应申请成为 VCCI 的成员，才可以使用 VCCI 标志。为了获得 VCCI 的认可，所提供的 EMI 测试报告必须由 VCCI 注册认可的测试机构签发。根据产品使用环境的不同把认证分为 CLASS A 和 CLASS B 两种要求。使用在家居或者办公环境的产品必须满足 CLASS B 的限值要求。
+
+
+
+
+
+
+44.SPI
+spi四种模式SPI的相位(CPHA)和极性(CPOL)分别可以为0或1，对应的4种组合构成了SPI的4种模式(mode)
+
+Mode 0 CPOL=0, CPHA=0 
+Mode 1 CPOL=0, CPHA=1
+Mode 2 CPOL=1, CPHA=0 
+Mode 3 CPOL=1, CPHA=1
+
+时钟极性CPOL: 即SPI空闲时，时钟信号SCLK的电平（1:空闲时高电平; 0:空闲时低电平）
+时钟相位CPHA: 即SPI在SCLK第几个边沿开始采样（0:第一个边沿开始; 1:第二个边沿开始）
+
+sd卡的spi常用的是mode 0 和mode 3，这两种模式的相同的地方是都在时钟上升沿采样传输数据，区别这两种方式的简单方法就是看空闲时，时钟的电平状态，低电平为mode 0 ，高电平为mode 3。
+
+
+
+
+
+45.gcc
+gcc -I -L -l区别
+我们用gcc编译程序时，可能会用到“-I”（大写i），“-L”（大写l），“-l”（小写l）等参数，下面做个记录：
+例：
+gcc -o hello hello.c -I /home/hello/include -L /home/hello/lib -lworld
+上面这句表示在编译hello.c时：
+-I /home/hello/include表示将/home/hello/include目录作为第一个寻找头文件的目录，寻找的顺序是：/home/hello/include-->/usr/include-->/usr/local/include
+GCC 命令行详解 -L 指定库的路径 -l 指定需连接的库名
+
+-l参数和-L参数
+-l参数就是用来指定程序要链接的库，-l参数紧接着就是库名，那么库名跟真正的库文
+件名有什么关系呢？
+就拿数学库来说，他的库名是m，他的库文件名是libm.so，很容易看出，把库文件名的
+头lib和尾.so去掉就是库名了。
+
+好了现在我们知道怎么得到库名了，比如我们自已要用到一个第三方提供的库名字叫lib
+test.so，那么我们只要把libtest.so拷贝到/usr/lib
+
+里，编译时加上-ltest参数，我们就能用上libtest.so库了（当然要用libtest.so库里
+的函数，我们还需要与libtest.so配套的头文件）。
+
+放在/lib和/usr/lib和/usr/local/lib里的库直接用-l参数就能链接了，但如果库文件
+没放在这三个目录里，而是放在其他目录里，这时我们
+
+只用-l参数的话，链接还是会出错，出错信息大概是：“/usr/bin/ld: cannot find 
+-lxxx”，也就是链接程序ld在那3个目录里找不到
+
+libxxx.so，这时另外一个参数-L就派上用场了，比如常用的X11的库，它放在/usr/X11R
+6/lib目录下，我们编译时就要用-L/usr/X11R6/lib -
+
+lX11参数，-L参数跟着的是库文件所在的目录名。再比如我们把libtest.so放在/aaa/bb
+b/ccc目录下，那链接参数就是-L/aaa/bbb/ccc -ltest
+
+另外，大部分libxxxx.so只是一个链接，以RH9为例，比如libm.so它链接到/lib/libm.s
+o.x，/lib/libm.so.6又链接到/lib/libm-2.3.2.so，
+
+如果没有这样的链接，还是会出错，因为ld只会找libxxxx.so，所以如果你要用到xxxx
+库，而只有libxxxx.so.x或者libxxxx-x.x.x.so，做一
+
+个链接就可以了ln -s libxxxx-x.x.x.so libxxxx.so
+
+手工来写链接参数总是很麻烦的，还好很多库开发包提供了生成链接参数的程序，名字
+一般叫xxxx-config，一般放在/usr/bin目录下，比如
+
+gtk1.2的链接参数生成程序是gtk-config，执行gtk-config --libs就能得到以下输出"-
+L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic 
+
+-lgmodule -lglib -ldl -lXi -lXext -lX11 -lm"，这就是编译一个gtk1.2程序所需的g
+tk链接参数，xxx-config除了--libs参数外还有一个参
+
+数是--cflags用来生成头文
+件包含目录的，也就是-I参数，在下面我们将会讲到。你可以试试执行gtk-config 
+--libs --cflags，看看输出结果。
+现在的问题就是怎样用这些输出结果了，最笨的方法就是复制粘贴或者照抄，聪明的办
+法是在编译命令行里加入这个`xxxx-config --libs --
+
+cflags`，比如编译一个gtk程序：gcc gtktest.c `gtk-config --libs --cflags`这样
+就差
+不多了。注意`不是单引号，而是1键左边那个键。
+
+除了xxx-config以外，现在新的开发包一般都用pkg-config来生成链接参数，使用方法
+跟xxx-config类似，但xxx-config是针对特定的开发包
+
+，但pkg-config包含很多开发包的链接参数的生成，用pkg-config --list-all命令可以
+列出所支持的所有开发包，pkg-config的用法就是pkg
+
+-config pagName --libs --cflags，其中pagName是包名，是pkg-config--list-all里
+列出名单中的一个，比如gtk1.2的名字就是gtk+，pkg-
+
+config gtk+ --libs --cflags的作用跟gtk-config --libs --cflags是一样的。比如：
+gcc gtktest.c `pkg-config gtk+ --libs --cflags`
+
+-include和-I参数
+-include用来包含头文件，但一般情况下包含头文件都在源码里用#include xxxxxx实现
+，-include参数很少用。-I参数是用来指定头文件目录
+
+，/usr/include目录一般是不用指定的，gcc知道去那里找，但是如果头文件不在/usr/i
+nclude里我们就要用-I参数指定了，比如头文件放
+
+在/myinclude目录里，那编译命令行就要加上-I/myinclude参数了，如果不加你会得到
+一个"xxxx.h: No such file or directory"的错误。-I
+
+参数可以用相对路径，比如头文件在当前目录，可以用-I.来指定。上面我们提到的--cf
+lags参数就是用来生成-I参数的。
+。-O参数
+这是一个程序优化参数，一般用-O2就是，用来优化程序用的，比如gcc test.c -O2，优
+化得到的程序比没优化的要小，执行速度可能也有所提高（我没有测试过）。
+
+-shared参数
+编译动态库时要用到，比如gcc -shared test.c -o libtest.so
+
+几个相关的环境变量
+PKG_CONFIG_PATH：用来指定pkg-config用到的pc文件的路径，默认是/usr/lib/pkgconf
+ig，pc文件是文本文件，扩展名是.pc，里面定义开发
+
+包的安装路径，Libs参数和Cflags参数等等。
+CC：用来指定c编译器。
+CXX：用来指定cxx编译器。
+LIBS：跟上面的--libs作用差不多。
+CFLAGS:跟上面的--cflags作用差不多。
+CC，CXX，LIBS，CFLAGS手动编译时一般用不上，在做configure时有时用到，一般情况
+下不用管。
+环境变量设定方法：export ENV_NAME=xxxxxxxxxxxxxxxxx
+
+关于交叉编译
+交叉编译通俗地讲就是在一种平台上编译出能运行在体系结构不同的另一种平台上，比
+如在我们地PC平台(X86 CPU)上编译出能运行在sparc 
+
+CPU平台上的程序，编译得到的程序在X86 CPU平台上是不能运行的，必须放到sparc 
+CPU平台上才能运行。
+当然两个平台用的都是linux。
+
+这种方法在异平台移植和嵌入式开发时用得非常普遍。
+
+相对与交叉编译，我们平常做的编译就叫本地编译，也就是在当前平台编译，编译得到
+的程序也是在本地执行。
+
+用来编译这种程序的编译器就叫交叉编译器，相对来说，用来做本地编译的就叫本地编
+译器，一般用的都是gcc，但这种gcc跟本地的gcc编译器
+
+是不一样的，需要在编译gcc时用特定的configure参数才能得到支持交叉编译的gcc。
+
+为了不跟本地编译器混淆，交叉编译器的名字一般都有前缀，比如sparc-xxxx-linux-gn
+u-gcc，sparc-xxxx-linux-gnu-g++ 等等
+
+交叉编译器的使用方法
+使用方法跟本地的gcc差不多，但有一点特殊的是：必须用-L和-I参数指定编译器用spar
+c系统的库和头文件，不能用本地(X86)
+的库（头文件有时可以用本地的）。
+例子：
+sparc-xxxx-linux-gnu-gcc test.c -L/path/to/sparcLib -I/path/to/sparcInclude 
+ 
+-L /home/hello/lib表示将/home/hello/lib目录作为第一个寻找库文件的目录，寻找的顺序是：/home/hello/lib-->/lib-->/usr/lib-->/usr/local/lib
+
+ -lworld表示在上面的lib的路径中寻找libworld.so动态库文件（如果gcc编译选项中加入了“-static”表示寻找libworld.a静态库文件）
+ 
+ 
+ 
+ 

@@ -183,7 +183,8 @@ P 为指向整型变量的指针。将 a 的地址赋予 p ，打印出 *p （�
    Anisotropic Magneto-Resistive (AMR)
    磁阻效應(Magneto resistance Effect, MR)
    giant magneto-impedance GMI
-   
+ 
+在半导体上外加与电流方向垂直的磁场，会使得半导体中的电子与空穴受到不同方向的洛伦兹力而在不同方向上聚集，在聚集起来的电子与空穴之间会产生电场，电场力与洛伦兹力产生平衡之后，不再聚集，此时电场将会使后来的电子和空穴受到电场力的作用而平衡掉磁场对其产生的洛伦兹力，使得后来的电子和空穴能顺利通过不会偏移，这个现象称为霍尔效应。而产生的内建电压称为霍尔电压。 
    
 6. git
 rm -rf ~/.ssh/
@@ -2100,6 +2101,558 @@ sparc-xxxx-linux-gnu-gcc test.c -L/path/to/sparcLib -I/path/to/sparcInclude
 
  -lworld表示在上面的lib的路径中寻找libworld.so动态库文件（如果gcc编译选项中加入了“-static”表示寻找libworld.a静态库文件）
  
+
+ 
+ 
+46. IIC
+i2c是很流行的串行半双工通信协议，主从架构。
+linux 中有关于i2c子系统的实现支持，其和平台无关的，具体实现需要驱动工程师自己实现。
+linux i2c中核心代码是i2c-core.c 其有i2c适配器、i2c算法、i2c驱动以及i2c设备注册、注销以及数据处理的实现。
+再介绍下i2c子系统各部分的关系：i2c适配器是设备，是i2c具体外设（外部或芯片内部）的抽象，i2c算法是i2c适配器的驱动，i2c设备是挂载到i2c外设的设备抽象，i2c驱动是i2c设备的驱动。
+
+struct bus_type i2c_bus_type = {
+        .name           = "i2c",
+        .match          = i2c_device_match,
+       .probe          = i2c_device_probe,
+         .remove         = i2c_device_remove,
+       .shutdown       = i2c_device_shutdown,
+         .pm             = &i2c_device_pm_ops,
+};
+.name           = "i2c"                        总线名称，就是bus下目录名称。
+.match          = i2c_device_match  是总线的设备、驱动匹配函数，在设备注册或者驱动注册时调用。
+.probe          = i2c_device_probe   是总线的设备探测函数，其实最终调用的是驱动的probe函数。
+
+
+i2c_adapter i2c适配器抽象（其实算上相关操作函数才是真正的抽象），代表i2c外设设备，其需要由相关的algorithms才能工作。
+struct module *owner;                    内核模块指针。
+unsigned int class;                         代表哪类设备，不需要具体class指针，只是标记是哪类设备，用来匹配用的。
+const struct i2c_algorithm *algo;    其用来操作设备的算法，是其驱动，没有算法适配器无法工作。
+void *algo_data;                               算法用到的数据。
+struct rt_mutex bus_lock;                 实时互斥锁，用来防止优先级翻转的，是实时进程需要的锁。
+int timeout;                                        操作超时时间。
+int retries;
+struct device dev;                                 设备驱动模型的代表。
+int nr;                                                    适配器号，即总线号，linux idr模块使用的，用来所以适配器其指针的。
+char name[48];                                     名称
+struct completion dev_released;           linux完成量
+struct mutex userspace_clients_lock;    互斥量
+struct list_head userspace_clients;        设备链表
+#define to_i2c_adapter(d) container_of(d, struct i2c_adapter, dev)  通过设备地址找到相应的适配器地址。
+
+
+
+i2c_algorithm i2c算法即适配器驱动，是i2c通信协议的时序实现。
+int (*master_xfer)                                              和外设的通信函数
+int (*smbus_xfer)                                               smbus协议通信函数
+u32 (*functionality) (struct i2c_adapter *);         查询是否支持适配器
+
+
+
+i2c_msg     i2c信息段：包含一包发送或接受数据的信息。
+__u16 addr;         i2c从设备地址，可以是7bit或10bit
+__u16 flags          i2c信息标志，代表地址长度 、读写数据等一些i2c协议标志
+__u16 len;            i2c消息长度*/
+__u8 *buf;     i2c消息指针
+
+
+
+i2c_client     是挂载i2c外设上的设备抽象。
+unsigned short flags     i2c设备标志，用来表示设备的地址长度以及设备协议类型
+unsigned short addr;     设备地址
+char name[I2C_NAME_SIZE];          名称
+struct i2c_adapter *adapter;              所需适配器设备
+struct i2c_driver *driver;                     所匹配的设备驱动
+struct device dev;                               设备模型的设备代表
+int irq;                    设备所使用的中断后
+struct list_head detected;                    i2c驱动中设备链表节点
+
+
+i2c_driver    是i2c设备驱动的抽象
+unsigned int class;     所属的类，和i2c适配器匹配
+int (*attach_adapter)   以及废弃的函数，保持兼容
+int (*probe)(struct i2c_client *, const struct i2c_device_id *);  驱动探测设备函数
+int (*remove)(struct i2c_client *);                                              驱动移除设备函数
+struct device_driver driver;                                                         设备驱动模型中驱动代表
+const struct i2c_device_id *id_table;                                          i2c设备匹配表
+int (*detect)(struct i2c_client *, struct i2c_board_info *);             i2c设备检查函数，用来探测相关i2c设备
+const unsigned short *address_list;                                            i2c设备地址指针
+
+
+
+i2c_device_id       i2设备匹配表，i2c驱动用来匹配i2c设备的，
+char name[I2C_NAME_SIZE];         i2c支持的设备名称
+
+
+
+i2c_board_info  是静态创建i2c设备的模板，i2c设备分为静态创建和动态探测创建。
+ type: chip type, to initialize i2c_client.name     用来初始化设备名称
+ flags: to initialize i2c_client.flags                       初始化设备标志
+addr: stored in i2c_client.addr                            初始化设备地址
+platform_data: stored in i2c_client.dev.platform_data  初始化设备模型的平台相关数据
+archdata: copied into i2c_client.dev.archdata             初始化设备模型子架构数据
+of_node: pointer to OpenFirmware device node           用来构建设备树
+irq: stored in i2c_client.irq                                             初始化设备中断号
+struct list_head clients;                                                                i2c设备链表头，用来遍历驱动中设备
+
+
+
+i2c_init  是i2c子系统的初始化函数，i2c总线注册，以及虚拟驱动的添加。
+
+1）.bus_register(&i2c_bus_type);  i2c总线注册，这样在/sys/bus/下就会增加i2c的节点
+.match= i2c_device_match,   i2c总线驱动和设备匹配函数 of_driver_match_device->of_match_device->of_match_node
+ i2c_device_match有设备驱动模型中匹配以及i2c子系统设备驱动匹配两部分
+.probe= i2c_device_probe,   i2c总线设备探测函数，最终会调用驱动中的probe函数
+
+
+2）.i2c_add_driver(&dummy_driver);  虚拟驱动的注册，用来创建注册i2c适配
+static inline int i2c_add_driver(struct i2c_driver *driver)
+{
+return i2c_register_driver(THIS_MODULE, driver);
+}
+i2c_register_driver  i2c驱动注册函数，i2c驱动和i2c适配器关联
+ if (unlikely(WARN_ON(!i2c_bus_type.p)))   检查驱动设备模型是否初始化好
+driver->driver.owner = owner;
+driver->driver.bus = &i2c_bus_type;      i2c驱动的驱动模型赋值
+ driver_register(&driver->driver);           设备驱动模型驱动注册，建立设备驱动模型
+INIT_LIST_HEAD(&driver->clients);     初始化驱动的i2c设备链表
+i2c_for_each_dev(driver, __process_new_driver);   遍历i2c总线适配器，动态添加i2c设备
+
+你的开发板上有几个I2C接口，就有几个adapter , 也就是有几条I2C bus ，  I2C CLIENT 对应的就是你的外围I2C 设备，有几个就有几个CLIENT , 把这些设备插入开发板， 对应其中的一条BUS, 那么相应的就对应了其中的一个ADAPTER , 接下来的就是  CLIENT 与 ADAPTER 勾搭成对了
+
+i2c_add_adapter  注册i2c适配器到系统，主要功能是首先通过ird机制给i2c适配器分配指针，然后注册该i2c适配器
+idr_pre_get           预分配i2c适配器指针
+idr_get_new_above  给i2c适配器分配指针并和id关联
+i2c_register_adapter  i2c注册适配器
+
+i2c_register_adapter  注册适配器  
+unlikely(WARN_ON(!i2c_bus_type.p   检查总线是否初始化完成
+unlikely(adap->name[0] == '\0')             检查适配器名称是否为空
+unlikely(!adap->algo)                             检查适配器算法是否为空
+rt_mutex_init(&adap->bus_lock);                         初始化实时互斥锁
+mutex_init(&adap->userspace_clients_lock);       初始化用户设备锁
+INIT_LIST_HEAD(&adap->userspace_clients);    初始化i2c设备链表
+dev_set_name(&adap->dev, "i2c-%d", adap->nr);  设置适配器设备驱动模型设备名称
+adap->dev.bus = &i2c_bus_type;                            初始化适配器设备驱动模型设备的总线类型
+adap->dev.type = &i2c_adapter_type;                    初始化适配器设备驱动模型设备类型
+device_register(&adap->dev);                                注册适配器设备到设备驱动模型
+i2c_scan_static_board_info(adap);                        扫描静态声明的i2c设备信息，该方法也对应
+i2c_scan_static_board_info 扫描静态声明的i2c设备信息 -》down_read读信号量    list_for_each_entry遍历i2c板信息-》i2c_new_devicei2c适配器增加新i2c设备，根据 i2c_board_info 静态设备声明信息-》device_register注册设备到设备驱动模型
+bus_for_each_drv(&i2c_bus_type,NULL,adap,__process_new_adapter);遍历总线上的i2c驱动，动态探测添加i2c设备，该方法主要为了适配器动态加载时比i2c驱动晚注册的情况。
+
+
+
+i2c适配器注册时机：
+1、在paltform驱动中注册，在板级初始化时注册一个platform设备，然后在注册platform驱动时将i2c适配器注册。
+这种方法属于适配器静态注册，是soc中i2c适配器通用注册方法，因为这样保证后续的i2c驱动注册以及i2c设备注册能找到匹配的适配器，i2c驱动和i2c设备注册在i2c适配器注册之后。
+2、加载一个内核模块，在模块中完成i2c适配器注册，该方法是适配器动态注册，注意必须保证i2c驱动和i2c设备注册在i2c适配器注册之后
+i2c适配器代表i2c外设，因此其要先与i2c驱动和设备注册
+
+
+
+
+
+47.camera
+isp 是image signal processing，用于图像处理，比如gamma调整，dynamic range correction，smooth，sharpness，format convert，resize，edge enhancement ，color correction等操作都是这里完成的。3aa 是ae/af/awb algorithms。 3aa 的硬件模块分析输出3a的统计信息。3aa软件是分析统计信息值进行算法处理。af 算法的输出会回馈调节vcm 马达。ae 会回馈调节感光芯片的曝光和增益，isp 数字增益，awb会通过isp调节awb gain，ccm的调整。isp，3aa相辅相成，不能完全切割分离，3aa的输入输出需要isp的协作完成。
+自动对焦算法通过既得图像对比度移动镜头使图像对比度达到最大.focus
+自动曝光算法将根据可用的光源条件自动设置曝光值. exposure
+自动白平衡算法根据光源条件调整图片颜色的保真程度。
+
+
+
+
+
+48.dumpsys
+adb shell                         //进入手机shell
+dumpsys | grep "DUMP OF SERVICE"  //列举当前手机所有支持的dumpsys命令
+
+ dumpsys package  <package_name>   //查看指定包名的信息
+ dumpsys activity <package_name>  //查看指定包名的activity信息
+
+ dumpsys alarm      //查看Alarm信息
+ dumpsys audio      //查看声音信息
+ dumpsys battery    //查看电池信息
+ dumpsys cpuinfo //查看CPU信息
+ dumpsys meminfo  <package_name>//查看指定包名的内存信息
+ dumpsys netstats//查看网络统计信息
+ dumpsys diskstats   //查看空间free状态
+ dumpsys jobscheduler   //查看任务计划
+ dumpsys power//查看功耗信息
+ dumpsys wifi//查看wifi信息
  
  
  
+
+
+49.AI
+数据网络效应：更多的用户->更多的数据->更智能的算法->更好的产品->更多的用户
+大公司做水平方向，更倾向于消费者
+小公司做垂直领域 专注于客户 专注于客户 专注于客户
+所谓AI技术，是人类在利用和改造“机器”的过程中所掌握的物质手段、方法和知识等各种活动方式的总和。 
+基础层（包含处理器/芯片） 
+技术层（自然语言处理/计算机视觉与图像/技术平台） 
+应用层（机器学习应用/智能无人机/智能机器人/自动驾驶辅助驾
+驶/语音识别）
+ 深度学习引领了本轮AI发展热潮。究其原因，在于算力和数据在近十年来获得了重大的突破。当下，人工智能产业出现了九大发展热点领域，分别是芯片、自然语言处理、语音识别、机器学习应用、计算机视觉与图像、技术平台、智能无人机、智能机器人、自动驾驶。
+
+商汤、旷视（北京）、云从（重庆）、依图（上海） 
+码隆科技（深圳） 图漾科技（上海）
+
+FDDB（人脸检测数据集）
+LFW（人脸比对数据集）
+
+
+
+
+
+50. .bat
+FOR 参数 %%变量名 IN (相关文件或命令) DO 执行的命令
+参数:FOR有4个参数 /d /l /r /f 他们的作用我在下面用例子解释
+%%变量名 :这个变量名可以是小写a-z或者大写A-Z,他们区分大小写,FOR会把每个读取到的值给他;
+IN:命令的格式,照写就是了;
+(相关文件或命令) :FOR要把什么东西读取然后赋值给变量,看下面的例子
+do:命令的格式,照写就是了!
+执行的命令:对每个变量的值要执行什么操作就写在这.
+可以在CMD输入for /?看系统提供的帮助!对照一下
+FOR %%variable IN (set) DO command [command-parameters]
+   %%variable   指定一个单一字母可替换的参数。
+   (set)    指定一个或一组文件。可以使用通配符。
+   command 指定对每个文件执行的命令。
+   command-parameters
+         为特定命令指定参数或命令行开关。
+/d 
+仅为目录 
+如果 Set (也就是我上面写的 "相关文件或命令") 包含通配符（* 和 ?），将对与 Set 相匹配的每个目
+录（而不是指定目录中的文件组）执行指定的 Command。
+系统帮助的格式:FOR /D %%variable IN (set) DO command
+他主要用于目录搜索,不会搜索文件,看这样的例子
+@echo off
+for /d %%i in (*) do @echo %%i
+pause
+把他保存放在C盘根目录执行,就会把C盘目录下的全部目录名字打印出来,而文件名字一个也不显示!
+在来一个,比如我们要把当前路径下文件夹的名字只有1-3个字母的打出来
+@echo off
+for /d %%i in (???) do @echo %%i
+pause
+这样的话如果你当前目录下有目录名字只有1-3个字母的,就会显示出来,没有就不显示了
+
+
+/R
+递归 
+进入根目录树 [Drive:]Path，在树的每个目录中执行 for 语句。如果在 /R 后没有指定目录，则认为是
+当前目录。如果 Set 只是一个句点 (.)，则只枚举目录树。
+系统帮助的格式:FOR /R [[drive:]path] %%variable IN (set) DO command
+上面我们知道,/D只能显示当前路径下的目录名字,那么现在这个/R也是和目录有关,他能干嘛呢?放心他比
+/D强大多了!
+他可以把当前或者你指定路径下的文件名字全部读取,注意是文件名字,有什么用看例子!
+@echo off
+for /r c:/ %%i in (*.exe) do @echo %%i
+pause
+咋们把这个BAT保存到D盘随便哪里然后执行,我会就会看到,他把C盘根目录,和每个目录的子目录下面全部
+的EXE文件都列出来了,这里的c:/就是目录了。
+再来一个
+@echo off
+for /r %%i in (*.exe) do @echo %%i
+pause
+参数不一样了，这个命令前面没加那个C:/也就是搜索路径,这样他就会以当前目录为搜索路径,比如你这
+个BAT你把他防灾d:/test目录下执行,那么他就会把D:/test目录和他下面的子目录的全部EXE文件列出
+来!!!
+
+/L
+迭代数值范围 
+使用迭代变量设置起始值 (Start#)，然后逐步执行一组范围的值，直到该值超过所设置的终止值 (End#)
+。/L 将通过对 Start# 与 End# 进行比较来执行迭代变量。如果 Start# 小于 End#，就会执行该命令。
+如果迭代变量超过 End#，则命令解释程序退出此循环。还可以使用负的 Step# 以递减数值的方式逐步执
+行此范围内的值。例如，(1,1,5) 生成序列 1 2 3 4 5，而 (5,-1,1) 则生成序列 (5 4 3 2 1)。语法是： 
+系统帮助的格式:for /L %% Variable in (Start#,Step#,End#) do Command 
+例如：
+@echo off
+for /l %%i in (1,1,5) do @echo %%i
+pause
+保存执行看效果,他会打印从1 2 3 4 5   这样5个数字
+(1,1,5)这个参数也就是表示从1开始每次加1直到5终止!
+再看这个例子
+@echo off
+for /l %%i in (1,1,5) do start cmd
+pause
+执行后是不是吓了一跳,怎么多了5个CMD窗口,呵呵!如果把那个 (1,1,5)改成 (1,1,65535)会有什么结果,
+我先告诉大家,会打开65535个CMD窗口....这么多你不死机算你强!
+当然我们也可以把那个start cmd改成md %%i 这样就会建立指定个目录了!!!名字为1-65535
+看完这个被我赋予破坏性质的参数后,我们来看最后一个参数
+
+含有/F的for详细说明
+含有/F的for有很大的用处，在批处理中使用的最多，用法如下：
+格式：
+FOR /F ["options"] %%i IN (file) DO command
+FOR /F ["options"] %%i IN ("string") DO command
+FOR /F ["options"] %%i IN ('command') DO command
+
+这个可能是最常用的，也是最强的命令，主要用来处理文件和一些命令的输出结果。
+file代表一个或多个文件
+string 代表字符串
+command代表命令
+["options"] 可选
+对于FOR /F %%i IN (file) DO command
+file为文件名，按照官方的说法是，for会依次将file中的文件打开，并且在进行到下一个文件之前将每个文件读取到内存，按照每一行分成一个一个的元素，忽略空白的行，看个例子。
+假如文件a.txt中有如下内容：
+
+第1行第1列 第1行第2列 第1行第3列
+第2行第1列 第2行第2列 第2行第3列
+第3行第1列 第3行第2列 第3行第3列
+
+你想显示a.txt中的内容，会用什么命令呢？当然是type，type a.txt
+for也可以完成同样的命令：
+for /f %%i in (a.txt) do echo %%i
+还是先从括号执行，因为含有参数/f,所以for会先打开a.txt，然后读出a.txt里面的所有内容，把它作为一个集合，并且以每一行作为一个元素，所以会产生这样的集合，
+
+{“第1行第1列 第1行第2列 第1行第3列”， //第一个元素
+“第2行第1列 第2行第2列 第2行第3列”， //第二个元素
+“第3行第1列 第3行第2列 第3行第3列”} //第三个元素
+
+集合中只有3个元素，同样用%%i依次代替每个元素，然后执行do后面的命令。
+具体过程：
+
+用%%i代替“第1行第1列 第1行第2列 第1行第3列”，执行do后面的echo %%i，显示“第1行第1列 第1行第2列 第1行第3列”，
+用%%i代替“第2行第1列 第2行第2列 第2行第3列”，执行echo %%i，显示“第2行第1列 第2行第2列 第2行第3列”，
+依次，直到每个元素都代替完为止。
+
+为了加强理解/f的作用，请执行一下两个命令，对比即可明白：
+
+for /f %%i in (a.txt) do echo %%i //这个会显示a.txt里面的内容，因为/f的作用，会读出a.txt中 
+的内容。
+for %%i in (a.txt) do echo %%i //而这个只会显示a.txt这个名字，并不会读取其中的内容。
+
+通过上面的学习，我们发现for /f会默认以每一行来作为一个元素，但是如果我们还想把每一行再分解更小的内容，该怎么办呢？不用担心，for命令还为我们提供了更详细的参数，使我们将每一行分为更小的元素成为可能。
+它们就是：delims和tokens
+delims 用来告诉for每一行应该拿什么作为分隔符，默认的分隔符是空格和tab键
+比如，还是上面的文件，我们执行下面的命令：
+
+for /f "delims= " %%i in (a.txt) do echo %%i
+
+显示的结果是：
+
+第1行第1列
+第2行第1列
+第3行第1列
+
+为什么是这样的呢。因为这里有了delims这个参数，=后面有一个空格，意思是再将每个元素以空格分割，默认是只取分割之后的第一个元素。
+执行过程是：
+
+将第一个元素“第1行第1列 第1行第2列 第1行第3列”分成三个元素：“第1行第1列” “第1行第2列” “第1行第3列”，它默认只取第一个，即“第1行第1列”，然后执行do后面的命令，依次类推。
+
+但是这样还是有局限的，如果我们想要每一行的第二列元素，那又如何呢？
+这时候，tokens跳出来说，我能做到。
+它的作用就是当你通过delims将每一行分为更小的元素时，由它来控制要取哪一个或哪几个。
+还是上面的例子，执行如下命令：
+
+for /f "tokens=2 delims= " %%i in (a.txt) do echo %%i
+
+执行结果：
+
+第1行第2列
+第2行第2列
+第3行第2列
+如果要显示第三列，那就换成tokens=3。
+同时tokens支持通配符*，以及限定范围。
+如果要显示第二列和第三列，则换成tokens=2,3或tokens=2-3,如果还有更多的则为：tokens=2-10之类的。
+此时的命令为：
+
+for /f "tokens=2,3 delims= " %%i in (a.txt) do echo %%i %%j
+
+怎么多出一个%%j？
+这是因为你的tokens后面要取每一行的两列，用%%i来替换第二列，用%%j来替换第三列。
+并且必须是按照英文字母顺序排列的，%%j不能换成%%k，因为i后面是j
+执行结果为：
+
+第1行第2列 第1行第3列
+第2行第2列 第2行第3列
+第3行第2列 第3行第3列
+对以通配符*，就是把这一行全部或者这一行的剩余部分当作一个元素了。
+比如：
+
+for /f "tokens=* delims= " %%i in (a.txt) do echo %%i
+
+执行结果为：
+
+第1行第1列 第1行第2列 第1行第3列
+第2行第1列 第2行第2列 第2行第3列
+第3行第1列 第3行第2列 第3行第3列
+其实就跟for /f %%i in (a.txt) do echo %%i的执行结果是一样的。
+再如：
+
+for /f "tokens=2,* delims= " %%i in (a.txt) do echo %%i %%j
+执行结果为：
+
+第1行第2列 第1行第3列
+第2行第2列 第2行第3列
+第3行第2列 第3行第3列
+
+用%%i代替第二列，用%%j代替剩余的所有
+最后还有skip合eol，这俩个简单，skip就是要忽略文件的前多少行，而eol用来指定当一行以什么符号开始时，就忽略它。
+比如：
+
+for /f "skip=2 tokens=*" %%i in (a.txt) do echo %%i
+结果为:
+
+第3行第1列 第3行第2列 第3行第3列
+用skip来告诉for跳过前两行。
+如果不加tokens=*的话，执行结果为：
+
+第3行第1列
+不知道怎么回事。
+再如，当a.txt内容变成：
+
+.第1行第1列 第1行第2列 第1行第3列
+.第2行第1列 第2行第2列 第2行第3列
+第3行第1列 第3行第2列 第3行第3列
+执行for /f "eol=. tokens=*" %%i in (a.txt) do echo %%i结果是：
+
+第3行第1列 第3行第2列 第3行第3列
+用eol来告诉for忽略以“.”开头的行。
+同样也必须加tokens=*，否则只会显示“第3行第1列
+
+
+if,正如它E文中的意思，就是“如果”的意思，用来进行条件判断。翻译过来的意思就是：如果符合某一条件，便执行后面的命令。 
+主要用来判断，1、两个“字符串”是否相等；2、两个数值是大于、小于、等于,然后执行相应的命令。
+@echo off 
+set "str=this is a test" 
+REM 检测变量%str%是否等于test，如果相等，显示OK，否则显示NO 
+if "%str%"=="test" (echo OK) else echo NO 
+pause>nul 
+
+2、检测数值：（注意，批处理中大于符号不能用：“>”,而用"gtr"，其它的也类似） 
+比较运算符一览： 
+EQU - 等于 
+NEQ - 不等于 
+LSS - 小于 
+LEQ - 小于或等于 
+GTR - 大于 
+GEQ - 大于或等于 
+检测数值 20 是否大于 15演示代码： 
+复制代码 代码如下:
+
+@echo off 
+set /a num1=20 
+set /a num2=15 
+if %num1% gtr %num2% echo %num1%大于%num2% 
+if %num1% EQU %num2% echo %num1%等于%num2% 
+if %num1% LSS %num2% echo %num1%小于%num2% 
+pause>nul 
+
+
+
+
+
+
+
+51.示波器
+示波器最重要的单一特性，即带宽在频率域提供范围标示。 带宽是大多数工程师选择示波器时首先考虑的技术指标。带宽以Hz衡量，根据频率决定信号范围，以便能精确显示及进行测试。 带宽不足，则示波器将不能显示出实际信号的准确表现。例如，信号的幅度也许会不准确、边缘也许会不平整、波形细节情况也许会丢失。
+所有示波器都会在较高频率时出现低通频率响应衰减。大多数带宽技术指标在 1 GHz 及以下的示波器通常会出现高斯响应，并在 -3 dB 频率的三分之一处表现出缓慢下降特征。带宽技术指标大于 1 GHz 的示波器通常拥有最大平坦频率响应。这类响应通常在 -3 dB 频率附近显示出具有更尖锐下降特征、更为平坦的带内响应。
+
+示波器的频率响应各有其优缺点。具有最大平坦度响应的示波器带内信号的衰减量少于具有高斯响应的示波器，这表明前者能够更精确地测量带内信号。具有高斯响应的示波器带外信号的衰减量小于具有最大平坦度响应的示波器，这表明在相同的带宽技术指标下，具有高斯响应的示波器拥有更快的上升时间。有时，将带外信号衰减到更高的程度有助于消除会造成采样混叠的高频率分量，从而达到 Nyquist 标准（fS > 2 x fMAX）。
+
+无论示波器具有高斯响应、最大平坦度响应或介于二者之间的响应，输入信号衰减 3 dB 所在的最低频率称为示波器的带宽。
+
+对于数字应用，您应当选择带宽比设计中的最快时钟速率至少高 5 倍的示波器。但是，如果您需要对信号进行精确的边沿速度测量，则必须先确定信号中的最大实际频率。
+
+对于模拟应用，应当选择带宽比设计中的最高模拟频率至少高 3 倍的示波器。但这个建议仅适用于在较低频段中具有相对平坦的频率响应的示波器。
+
+影响示波器信号保真度的因素除了采样率之外，还有很多其他方面的原因。在某些情况下，采样率较低的示波器可以获得更精确的测量结果。
+
+若要满足 Nyquist 条件，需要示波器按照高于示波器带宽技术指标三到五倍的采样率进行采样，具体取决于示波器的频率衰减特征。为了获得更高的采样率，示波器厂商经常需要对多个实时 ADC 进行交叉。但是，如果采用实时交叉，则交叉 ADC 应垂直匹配且相位延迟时钟脉冲的定时必须精确，这一点至关重要。请务必注意，问题不在于交叉 ADC 的数量，而是交叉的精确度。否则便是违背 Nyquist 的第二条规则（等间隔采样），从而会产生失真，使得具有更高采样率示波器的预期优势化为乌有。
+
+
+
+
+
+52.Makefile
+Makefile的规则
+   在讲述这个Makefile之前，还是让我们先来粗略地看一看Makefile的规则。
+
+          target... : prerequisites ...
+
+          command
+
+          ...
+
+          ...
+         -------------------------------------------------------------------------------
+
+       target也就是一个目标文件，可以是Object File，也可以是执行文件。还可以是一个标签（Label），对于标签这种特性，在后续的“伪目标”章节中会有叙述。
+
+       prerequisites就是，要生成那个target所需要的文件或是目标。
+
+       command也就是make需要执行的命令。（任意的Shell命令）
+
+
+       这是一个文件的依赖关系，也就是说，target这一个或多个的目标文件依赖于prerequisites中的文件，其生成规则定义在command中。说白一点就是说，prerequisites中如果有一个以上的文件比target文件要新的话，command所定义的命令就会被执行。这就是Makefile的规则。也就是Makefile中最核心的内容。
+
+CC := gcc
+
+WORK_TOOL_DIR ?= $(shell pwd)
+
+CFILES	+= 	$(wildcard *.c) 
+
+COBJS	:=  $(CFILES:.c=.o)
+
+INC_PATH:= 	-I$(WORK_TOOL_DIR)
+
+
+TARGET     = ir
+
+all: $(TARGET) 
+
+$(TARGET): $(COBJS)
+	$(CC) -o $@ $(COBJS)
+
+%.o : %.c
+
+	$(CC) -c $(INC_PATH) $< -o $@ 
+
+clean:
+
+	rm -f $(TARGET)  $(COBJS)
+	
+	
+	
+
+
+	
+54.qcom commond
+adb shell sns_dsps_tc0001
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+55.3D
+目前3D Sensing有3种主流方案，分别是结构光方案、TOF方案以及双目立体成像方案
+
+VCSEL，全名为垂直腔面发射激光器（Vertical Cavity Surface Emitting Laser），以砷化镓半导体材料为基础研制，有别于LED（发光二极管）和LD(Laser Diode，激光二极管)等其他光源，具有体积小、圆形输出光斑、单纵模输出、阈值电流小、价格低廉、易集成为大面积阵列等优点，广泛应用与光通信、光互连、光存储等领域。
+
+单光子雪崩二极管(SPAD:Single Photon Avalanche Diode)
+PN结有单向导电性，正向电阻小，反向电阻很大。
+当反向电压增大到一定数值时，反向电流突然增加。就是反向电击穿。它分雪崩击穿和齐纳击穿(隧道击穿)。
+雪崩击穿是PN结反向电压增大到一数值时，载流子倍增就像雪崩一样，增加得多而快。
+利用这个特性制作的二极管就是雪崩二极管
+雪崩击穿是在电场作用下，载流子能量增大，不断与晶体原子相碰，使共价键中的电子激发形成自由电子-空穴对。新产生的载流子又通过碰撞产生自由电子-空穴对，这就是倍增效应。1生2，2生4，像雪崩一样增加载流子。
+齐纳击穿完全不同，在高的反向电压下，PN结中存在强电场，它能够直接破坏共价键将束缚电子分离来形成电子-空穴对，形成大的反向电流。齐纳击穿需要的电场强度很大！只有在杂质浓度特别大的PN结才做得到。（杂质大电荷密度就大）
+一般的二极管掺杂浓度没这么高，它们的电击穿都是雪崩击穿。齐纳击穿大多出现在特殊的二极管中，就是稳压二极管
+它是在外加电压作用下可以产生高频振荡的晶体管。产生高频振荡的工作原理是：利用雪崩击穿对晶体注入载流子，因载流子渡越晶片需要一定的时间，所以其电流滞后于电压，出现延迟时间，若适当地控制渡越时间，那么，在电流和电压关系上就会出现负阻效应，从而产生高频振荡。它常被应用于微波领域的振荡电路中。
+
+
+56.PS+ALS
+距离传感器（PS）的工作原理在于，使用一个红外二极管，向外发射红外线，如果有物体靠近时会反射红外光线，此反射的红外光线被红外光探测器感知，并将此信号经过一些列逻辑控制操作传递给CPU，使CPU得以控制屏幕的唤醒与否。
+
+环境光传感器（ALS），如大家所知是用于探测环境中光信号的变化然后将其变化转换为数字信号输出给CPU。ALS现在有两种探测方式，第一种是通过将与人眼光谱响应一致的IR滤波材料装在环氧树脂内，以滤掉红外辐射（IR）光线，这样传感器的光谱响应就可以接近于人眼了。但是这种材料较为难以寻找，使得此种方案实施后与设想的结果出现较大的偏差。而在此基础上不难发现只允许IR通过而较好滤除其他光的材料却普遍存在（例如红外传输系统中使用的材料）。因此提出的第二种方案：在ALS 中使用两支光电二极管，一支光电二极管是可以检测从300nm~1100nm区间（宽带）所有光线，而第二支二极管仅对IR敏感（利用滤光材料），用于监测到达传感器的IR光线，然后从宽带光电二极管接收到的光线中减掉IR光。
+

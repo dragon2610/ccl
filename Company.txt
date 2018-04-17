@@ -302,4 +302,33 @@ NetflixÊÇÒ»¼ÒÃÀ¹ú¹«Ë¾£¬ÔÚÃÀ¹ú¡¢¼ÓÄÃ´ó]Ìá¹©»¥ÁªÍøËæÑ¡Á÷Ã½Ìå²¥·Å£¬¶¨¶îÖÆDVD¡¢À¶¹â¹
 
 
 
-37.
+37.Synopsys£¨ÐÂË¼£©
+(Nasdaq: SNPS)ÊÇÎªÈ«Çò¼¯³ÉµçÂ·Éè¼ÆÌá¹©µç×ÓÉè¼Æ×Ô¶¯»¯(EDA)Èí¼þ¹¤¾ßµÄÖ÷µ¼ÆóÒµ¡£ÎªÈ«Çòµç×ÓÊÐ³¡Ìá¹©¼¼ÊõÏÈ½øµÄICÉè¼ÆÓëÑéÖ¤Æ½Ì¨£¬ÖÂÁ¦ÓÚ¸´ÔÓµÄÐ¾Æ¬ÉÏÏµÍ³(SoCs)µÄ¿ª·¢¡£Í¬Ê±£¬Synopsys¹«Ë¾»¹Ìá¹©ÖªÊ¶²úÈ¨ºÍÉè¼Æ·þÎñ£¬Îª¿Í»§¼ò»¯Éè¼Æ¹ý³Ì£¬Ìá¸ß²úÆ·ÉÏÊÐËÙ¶È¡£
+
+
+
+
+
+38.TE Connectivity Ì©¿Æµç×Ó
+¹«Ë¾×Ü²¿Î»ÓÚÃÀ¹ú¡£
+¹«Ë¾Éè¼ÆºÍÖÆÔìµÄ50¶àÍòÖÖ²úÆ·£¬Á¬½ÓºÍ±£»¤ÁËÎÒÃÇÈÕ³£Ê¹ÓÃµÄ¸÷ÖÖ²úÆ·ÖÐµÄµçÁ¦ºÍÊý¾ÝÁ÷¶¯¡£ÎÒÃÇÈ«Çò½«½ü10ÍòÃûÔ±¹¤Óë¸÷ÐÐ¸÷ÒµµÄ¿Í»§½øÐÐºÏ×÷¡£ ´ÓÏû·ÑÀàµç×Ó£¬µçÁ¦ºÍÒ½ÁÆ£¬µ½Æû³µ¡¢º½¿Õº½ÌìÒÔ¼°Í¨Ñ¶ÍøÂç£¬ ÎÒÃÇÓÃ¸üÖÇÄÜ¡¢¸üÑ¸ËÙ¡¢¸ü³öÉ«µÄ¼¼Êõ, ¸³Óè²úÆ·¸ü¶àµÄ¿ÉÄÜ¡£
+TE Connectivity1989Äê½øÈëÖÐ¹ú£¬ÔÚÉÏº£¿ªÉèÁËµÚÒ»¼Ò¹¤³§¡£Ä¿Ç°£¬TE ConnectivityÔÚÖÐ¹úÓµÓÐÔ¼38£¬000ÃûÔ±¹¤£¬½¨Á¢ÁË16¸öÉú²ú»ùµØ£¬²¢Í¨¹ýÉèÔÚÈ«¹ú14¸ö³ÇÊÐµÄÏúÊÛ°ìÊÂ´¦Îª¿Í»§Ìá¹©·þÎñ¡£2010²ÆÄêTE ConnectivityÖÐ¹úÇøÏúÊÛ×Ü¶î´ï19ÒÚÃÀÔª£¬Ô¼Õ¼¹«Ë¾Äê¶È×ÜÊÕÈëµÄ16%¡£
+TE ConnectivityÎªÆû³µ¡¢Êý¾Ý´«ÊäÏµÍ³¡¢Ïû·ÑÀàµç×Ó¡¢Í¨ÐÅºÍÆóÒµÍøÂç¡¢º½¿Õº½Ìì¡¢·ÀÎÀÓë´¬²°¡¢Ò½ÁÆ¡¢ÄÜÔ´¼°ÕÕÃ÷µÈ¸÷ÐÐ¸÷ÒµµÄÓâ2ÍòÃû¿Í»§Éè¼Æ¡¢ÖÆÔìºÍÏúÊÛÔ¼50ÍòÖÖ²úÆ·¡£ÎÒÃÇÌá¹©µÄÃ¿ÖÖ¼¼Êõ¡¢²úÆ·ºÍ·þÎñ¶¼ÓµÓÐÐÔÄÜÓÅÊÆ£¬ÕâÐ©²úÆ·°üÀ¨Á¬½ÓÆ÷ÏµÍ³¡¢¼ÌµçÆ÷¡¢¹âÏË¡¢µçÂ·±£»¤Éè±¸¡¢·Ö²¼Ê½ÌìÏßÏµÍ³¡¢µçÏßµçÀÂ¡¢´¥ÃþÆÁ¡¢ÈÈËõÌ×¹Ü¡¢»ú¼ÜºÍÅäÏß¼Ü¡¢ÍøÂçµçÀÂÏµÍ³¼°º£µ×µçÐÅÏµÍ³¡£
+
+
+
+
+39. Artesyn Technologies
+Artesyn TechnologiesÊÇÒ»¼ÒÈ«ÇòÁìÏÈµÄµçÔ´¹«Ë¾£¬×Ü²¿Î»ÓÚ·ðÂÞÀï´ïÖÝBoca Raton £¬ÑÐ·¢»ú¹¹±é¼°±±ÃÀ¡¢Å·ÖÞ¼°ÑÇÖÞ£¬ÏúÊÛÍøÂç±é¼°È«Çò£¬ÊÇÄÉË¹´ï¿Ë½»Ò×ËùÉÏÊÐµÄ¹«Ë¾£¬´úÂëÎªATSN ¡£
+¹«Ë¾×¨Îª·þÎñÆ÷¡¢´æ´¢Éè±¸¡¢ÎÞÏßºÍµçÐÅÏµÍ³µÄ»ù´¡½á¹¹Ó¦ÓÃ£¬Ìá¹©Éè¼Æ¡¢ÖÆÔì£¬ÒÔ¼°ÏúÊÛ¸ß¶ËµçÔ´×ª»»Æ÷ºÍÇ¶ÈëÊ½°å¿¨£¬²¢Ìá¹©½â¾ö·½°¸£¬ÊÇ¸ÃÁìÓòµÄÈ«ÇòÁìµ¼Õß¡£²úÆ·¹ã±»·ºÓ¦ÓÃÓÚ¸ß¶Ë·þÎñÆ÷¡¢
+Êý¾Ý´æ´¢Éè±¸¡¢Â·ÓÉÆ÷¡¢¼¯ÏßÆ÷¡¢¸ßËÙµ÷ÖÆ½âµ÷Æ÷¡¢ÉäÆµ·Å´óÏµÍ³¡¢»ùÕ¾¿ØÖÆÆ÷ºÍÊÕ·¢Æ÷µÈ²úÆ·ÖÐ¡£
+2003Äê£¬Artesyn TechnologiesÆìÏÂArtesyn North Amerca. ÓëTI£¨µÂÖÝÒÇÆ÷£©¡¢Astec Power£¨Emerson²¿ÃÅ£©¹²Í¬×é½¨¸ºÔØµãÁªÃË POLA(Point of Load Alliance)£¬ÎªµçÔ´ÏµÍ³¿ØÖÆÖÆ¶©Ò»ÖÖ¿ª·ÅÐÔµÄ¼Ü¹¹Í¨Ñ¶±ê×¼£¬ÕâÖÖÊý×ÖÐ­ÒéÊÇÖ¸µçÔ´¹ÜÀí×ÜÏß(Power Management Bus»òPMBus)£¬Ëü½«½¨Á¢ÔÚ²úÒµ±ê×¼I2C´®ÐÐ×ÜÏßÖ®ÉÏ£¬ºóÀ´°®Á¢ÐÅ¡¢Intersil Corp.¡¢Microchip Technology Inc¡¢Summit Microelectronics¡¢Volterra SemiconductorºÍZilker Labs Inc.µÈµçÔ´¼°Ð¾Æ¬³§ÉÌÒ²¼ÓÈëÁË¸ÃÁªÃË¡£
+2006 Äê2 ÔÂ2 ÈÕ£¬Emerson ¹«Ë¾£¨È«Çò500Ç¿£¬µç×ÓÀàµÚ2Î»£©Ðû²¼ÒÔ5ÒÚÃÀÔªÏÖ½ðÊÕ¹ºArtesyn£¬Artesyn³ÉÎª°¬Ä¬ÉúÈ«×Ê×Ó¹«Ë¾¡£¸ÃÊÕ¹ºµÄ´ï³ÉÔöÇ¿ÁË°¬Ä¬ÉúÍøÂçÄÜÔ´Ç¶ÈëÊ½µçÔ´×ª»»¼¼ÊõÄÜÁ¦£¬Í¬Ê±ArtesynÒ²¿ÉÒÔÆ¾½èEmerson ±é¼°È«ÇòµÄ»ù´¡ÉèÊ©£¬Ê¹Æä²»¶Ï±ä»¯µÄÐèÇó³É¹¦µØµÃÒÔÂú×ã½«¹«Ë¾ÁìÏÈ¼¼ÊõÌáÉýµ½ÐÂµÄ¸ß¶È¡£
+
+
+
+
+
+40.Kyocera ¾©´É
+¾©´ÉÊÇÒ»¸öÆ·ÅÆ£¬Á¥ÊôÓÚ¾©´ÉÖêÊ½»áÉç£¬³ÉÁ¢ÓÚ1959Äê4ÔÂ1ÈÕ£¬¹«Ë¾×Ü²¿Î»ÓÚÈÕ±¾¾©¶¼ÊÐ·ü¼ûÇø¤È¤Ð¤É¤Îî®¤¿¤±¤À6ºÅ£¬ÆóÒµ´´½¨Õß¼æÃûÓþ»á³¤ÊÇµ¾Ê¢ºÍ·ò ¡£
+¾©´ÉµÄµÚÒ»¸ö×ÖÄ¸¡°K¡±»·ÆðÁËÌÕ´ÉÕâÒ»Ó¢ÎÄµÄµÚÒ»¸ö×ÖÄ¸¡°C¡±£¬ËüÓÉÏóÕ÷×·Çó¸ü¹ãÀ«µÄÁìÓò£¬Õ¹³áÃæÏòÎ´À´µÄÆóÒµÉÌ±êºÍÆóÒµ±êÊ¶¹¹³É¡£1982Äê10ÔÂ£¬¹«Ë¾ÓÉ¡°¾©¶¼ÌÕ´ÉÖêÊ½»áÉç¡±±ä¸üÎª¡°¾©´ÉÖêÊ½»áÉç¡±Ö®¼Ê£¬±ã¿ªÊ¼ÆôÓÃÕâÒ»±êÊ¶¡£×÷ÎªÏóÕ÷ÐÔ±ê¼ÇµÄÑÕÉ«£¬Ñ¡ÔñÁË¸»ÓÐÈÈÇéºÍÌôÕ½ÒâÎ¶µÄºìÉ« ¡£[2] 

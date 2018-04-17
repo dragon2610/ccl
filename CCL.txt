@@ -1,5 +1,24 @@
 or create a new repository on the command line
 
+cat /proc/version
+Linux version 4.9.59-v7+ (dc4@dc4-XPS13-9333) (gcc version 4.9.3 (crosstool-NG crosstool-ng-1.22.0-88-g8460611) ) #1047 SMP Sun Oct 29 12:19:23 GMT 2017
+
+Linux version 3.4.113-sun8i (root@xeon) (gcc version 5.5.0 (Linaro GCC 5.5-2017.10) ) #18 SMP PREEMPT Wed Jan 24 22:10:49 CET 2018
+
+uname -a
+Linux raspberrypi 4.9.59-v7+ #1047 SMP Sun Oct 29 12:19:23 GMT 2017 armv7l GNU/Linux
+Linux bananapim2zero 3.4.113-sun8i #18 SMP PREEMPT Wed Jan 24 22:10:49 CET 2018 armv7l GNU/Linux
+
+
+apt-get python3-pygraphviz python3-protobuf
+
+旭化成电子科技（上海）有限公司
+上海市徐汇区淮海中路999号 上海环贸广场办公楼一期（即2幢2号）8层816室
+021-63915500
+91310000679339691L
+中国银行淮海中路第二支行
+441659220380
+
 echo "# ccl" >> README.md
 git init
 git add README.md
@@ -42,6 +61,17 @@ adb shell sync
 试试adb切换到com口 
 adb shell 
 setprop persist.sys.usb.config diag,adb
+
+@adb shell mount -o remount,rw /firmware
+
+@adb shell mount -o rw,remount /firmware
+
+adb shell "cat /system/build.prop | grep "product""
+
+cat  /proc/cpuinfo
+
+
+
 
 1. Dlopen
 以指定模式打开指定的动态连接库文件，并返回一个句柄给调用进程，dlerror返回出现的错误，dlsym通过句柄和连接符名称获取函数名或者变量名，dlclose来卸载打开的库
@@ -2613,8 +2643,24 @@ clean:
 	rm -f $(TARGET)  $(COBJS)
 	
 	
-	
 
+$@          --代表目标文件(target)
+$^            --代表所有的依赖文件(components)
+
+$<           --代表第一个依赖文件(components中最左边的那个)。	
+
+
+gcc -c a.c  编译成目标文件a.o 
+
+gcc -o a a.o  生成执行文件a.exe 
+
+gcc a.c  生成执行文件a.exe 
+
+gcc -o a -c a.c    编译成目标文件a 
+
+gcc -o a  a.c    生成执行文件a.exe 
+
+只要参数中有-c，总是生成目标文件；只要参数中无-c而只有-o，则总是生成执行文件。
 
 	
 54.qcom commond
@@ -2656,3 +2702,231 @@ PN结有单向导电性，正向电阻小，反向电阻很大。
 
 环境光传感器（ALS），如大家所知是用于探测环境中光信号的变化然后将其变化转换为数字信号输出给CPU。ALS现在有两种探测方式，第一种是通过将与人眼光谱响应一致的IR滤波材料装在环氧树脂内，以滤掉红外辐射（IR）光线，这样传感器的光谱响应就可以接近于人眼了。但是这种材料较为难以寻找，使得此种方案实施后与设想的结果出现较大的偏差。而在此基础上不难发现只允许IR通过而较好滤除其他光的材料却普遍存在（例如红外传输系统中使用的材料）。因此提出的第二种方案：在ALS 中使用两支光电二极管，一支光电二极管是可以检测从300nm~1100nm区间（宽带）所有光线，而第二支二极管仅对IR敏感（利用滤光材料），用于监测到达传感器的IR光线，然后从宽带光电二极管接收到的光线中减掉IR光。
 
+
+
+
+57.PCM
+PCM是英文Pulse-code modulation的缩写，中文译名是脉冲编码调制。我们知道在现实生活中，人耳听到的声音是模拟信号，PCM就是要把声音从模拟转换成数字信号的一种技术，他的原理简单地说就是利用一个固定的频率对模拟信号进行采样，采样后的信号在波形上看就像一串连续的幅值不一的脉冲，把这些脉冲的幅值按一定的精度进行量化，这些量化后的数值被连续地输出、传输、处理或记录到存储介质中，所有这些组成了数字音频的产生过程。
+
+PCM信号的两个重要指标是采样频率和量化精度，目前，CD音频的采样频率通常为44100Hz，量化精度是16bit。通常，播放音乐时，应用程序从存储介质中读取音频数据（MP3、WMA、AAC......），经过解码后，最终送到音频驱动程序中的就是PCM数据，反过来，在录音时，音频驱动不停地把采样所得的PCM数据送回给应用程序，由应用程序完成压缩、存储等任务。所以，音频驱动的两大核心任务就是：
+playback    如何把用户空间的应用程序发过来的PCM数据，转化为人耳可以辨别的模拟音频
+capture     把mic拾取到得模拟信号，经过采样、量化，转换为PCM信号送回给用户空间的应用程序
+
+IIS仅仅是PCM的一个分支，接口定义都是一样的
+
+IIS的采样频率一般为44.1KHZ和48KHZ做
+PCM采样频率一般为8K,16K。
+它们有四组信号: 位时钟信号，同步信号，数据输入，数据输出。     
+PCM一般传单声道的声音，也可以传立体声。
+IIS一般传立体声。数据格式都为PCM格式。   
+左（右）声道的一个点一般为16位，两个声道加起来为32位。
+IIS为一个周期传2点。   
+
+1.PCM(脉冲编码调制)
+ (1) 时钟脉冲 BCLK ；BCLK的频率=2×采样频率×采样位数 
+
+ (2) 帧同步信号FS; 该信号为低时该帧数据有效
+
+ (3)接收数据DR
+
+ (4)发送数据DX  
+
+在FS信号的上升沿，数据传输从MSB（Most Significant Bit）字开始，FS频率等于采样率。
+FS信号之后开始数据字的传输，单个的数据位按顺序进行传输，1个时钟周期传输1个数据字。
+发送MSB时，信号的等级首先降到最低，以避免在不同终端的接口使用不同的数据方案时造成MSB的丢失。
+  PCM接口很容易实现，原则上能够支持任何数据方案和任何采样率：
+
+  但需要每个音频通道获得一个独立的数据队列。
+
+2. IIS  
+
+IIS接口（Inter-IC Sound）在20世纪80年代首先被飞利浦用于消费音频，
+并在一个称为LRCLK（Left/Right CLOCK）的信号机制中经过多路转换，
+将两路音频信号变成单一的数据队列：
+(1) LRCLK为高时，左声道数据被传输
+(2) LRCLK为低时，右声道数据被传输
+
+与PCM相比，IIS更适合于立体声系统。
+对于多通道系统，在同样的BCLK和LRCLK条件下，并行执行几个数据队列也是可能的。 
+ (1)分时复用数据线；两路音频信号变成单一的数据队列。  
+ (2)字段选择线；高时传左声道数据，低传右声道数据。 采样频率：44.1K，48K. 
+ (3)时钟信号线,SCLK；SCLK的频率=2×采样频率×采样位数    
+
+3. AC97,可以传输控制指令； 
+   AC97是以Intel为首的5个PC厂商，在1997年共同提出的规格标准。
+
+  与PCM/I2S不同：AC97不只是一种数据格式，它还具有控制功能。
+
+  AC'97采用AC-Link与外部的编解码器相连
+  AC-Link接口包括:
+  (1) 位时钟（BITCLK）
+  (2) 同步信号校正（SYNC）
+  (3) 从编码到处理器及从处理器中解码（SDATDIN与SDATAOUT）的数据队列
+
+  AC'97数据帧以SYNC脉冲开始，包括12个20位时间段（时间段为标准中定义的不同的目的服务）及16位“tag”段，
+
+  共计256个数据序列。
+例如：
+时间段“1”和“2”用于访问编码的控制寄存器，而时间段“3”和“4”分别负载左、右两个音频通道。
+“tag”段表示其他段中哪一个包含有效数据。
+
+把帧分成时间段使传输控制信号和音频数据仅通过4根线到达9个音频通道或转换成其他数据流成为可能。
+与具有分离控制接口的IIS方案相比，AC'97明显减少了整体管脚数。
+一般来说，AC'97 编解码器采用TQFP48封装.  
+PCM、IIS和AC97各有其优点和应用范围，例如：
+在CD、MD、MP3随身听多采用IIS接口，移动电话会采用PCM接口
+具有音频功能的PDA则多使用和PC一样的AC'97编码格式。
+
+   AC97系统时钟信号：24.5MHZ. 
+   (1) 位时钟 BITCLK     12.288MHZ    
+   (2) 同步信号校正 SYNC   48kHZ 
+   (3) SDATDIN  
+   (4) SDATAOUT   
+
+   欧洲的30路脉码调制PCM简称E1，速率是2.048Mbit/s 。 
+   我国采用的是欧洲的E1标准。 E1的一个时分复用帧（其长度T=125us 即取样周期125微秒）共划分为32相等的时隙，   时隙的编号为CH0~CH31。
+   其中时隙CH0用作帧同步用，时隙CH16用来传送信令，剩下CH1~CH15和CH17~CH31 共30个时隙用作30个话路。
+   每个时隙传送8bit，因此共用256bit。每秒传送8000个帧，因此PCM一次群E1的数据率就是 2.048Mbit/s。 
+   (1)、一条E1是2.048Mbps的链路，用PCM编码。    
+   (2)、一个E1的帧长为256个bit,分为32个时隙，一个时隙为8个bit。    
+   (3)、每秒有8000个E1的帧通过接口，即8K*256=2048kbps。     
+   (4)、每个时隙在E1帧中占8bit，8*8k=64k，即一条E1中含有32个64K
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+58. banana-pi
+BPI-M2U 
+Banana Pi BPI-M2 Ultra是一块搭载了全志R40 SoC的四核迷你单板电脑，它拥有2gb的内存和8gb的emcc，	MALI-400 MP2 @ 500MHz 而且板载wifi和蓝牙bt。 接口方面拥有两个标准usb接口，一个otg接口，一个hdmi接口，一个耳麦复合接口和一个直流电源接口更重要的是，它还有一个sata接口。。 
+作为比派家族的一员，M2 Ultra是Banana Pi M1/M1+的升级版本并且支持原生sata. R40的sata接口支持做媒体相关的项目，比如Nas，家庭媒体中心等等。
+
+BPI-R2
+MT7623N四核ARM 路由器  2GB RAM, Wireless b/g/n    4 GbE LAN 1 GbE WAN
+
+BPI-M2M
+四核 ARM Cortex A7 R40 SoC  2GB RAM 8GB eMMC SATA  WiFi和蓝牙4.0
+
+BPI-M64 /  BPI-M64(R18)
+Banana Pi BPI-M64是一块4核64位单板电脑。
+CPU	1.2 Ghz Quad-Core ARM Cortex A53 64-Bit Processor
+GPU	MALI-400 MP2 @ 500MHz 其拥有2gb的内存和8gb的emcc，而且板载wifi和蓝牙bt。接口方面拥有两个标准usb接口，一个otg接口，一个hdmi接口，一个耳麦复合接口和一个直流电源接口。
+作为比派家族的一员，越过了m4而取名m64，一是m4为之后的16核开发板保留，二是为体现其64位特点。
+
+BPI-M3
+香蕉派BPI-M3是一个拥有8核处理器和2GBRAM的超级单板电脑。 单说处理单元，它配备了千兆网口，2个USB，SATA，Wifi，蓝牙4.0和HDMI接口。它可以运行Android, Lubuntu, Ubuntu和Raspbian等操作系统
+作为M2的升级版，M3相对M2来说更好地利用了八核的芯片，遗憾的是A83T不支持SATA接口，所以sata接口是usb转出来的
+CPU	A83T ARM Cortex-A7 octa-core,512 KB L1 cache 1 MB L2 cache
+GPU	PowerVR SGX544MP1路 Comply with OpenGL ES 2.0, OpenCL 1.x, DX 9_3
+
+BPI-M2
+香蕉派BPI-M2是第二代单板电脑，它升级了芯片，能提供更强的计算能力，它搭载了高性能的四核芯片，DDR3 SDRAM，千兆网口，4个USB以及HDMI接口。它能跑Android, Lubuntu,Ubuntu, Debian, and Raspbian等一系列系统。
+性能方面，M2有着四核芯片，它同样有WIFI功能，但是有更多的USB口；但是遗憾的是它没有SATA接口，，所以如果你想接硬盘就只能用USB口。
+CPU	A31S ARM Cortex-A7™ Quad-core 256K[2] B L1 cache 1MB L2 cache
+GPU	PowerVR SGX54MP2 Comply with OpenGL ES 2.0 OpenCL 1x,DX9_3
+
+BPI-M2+
+香蕉派BPI-M2+是另一个ARM芯片开发板，它有着更强的计算能力以及更方便的大小（只有55*55MM的大小），搭载了全志H3四核芯片、1GB DDR3 RAM。
+这块板子只保留了一些基础的接口，例如USB，HDMI,USB OTG, DC口, 千兆网口，WiFi, BT, 相机接口, 和40 pin的GPIO
+M2+是H3芯片的开发板，其在视频处理方面有着优秀的表现。M2+可以被当成媒体中心或者Linux微型电脑。
+CPU	H3 Quad-core Cortex-A7 H.265/HEVC 4K
+GPU	Mali400MP2 GPU @600MHz,Supports OpenGL ES 2.0
+
+BPI-M1+
+香蕉派升级版相比之前的基础版增加了可玩性，它同样搭载了全志的高性能双核芯片，它的主频是1GHZ、1GB的DDR3 SDRAM、千兆网口、SATA接口和HDMI接口，相比基础版本，它增加了WiFi g/b/n。同样可以跑Android, Lubuntu, Ubuntu, Debian, and Raspbian系统。
+BPI-M1+是我们的M1的升级版本，我们认为板载WIFI会让使用者更方便的搭建他们的桌面或者路由器项目
+CPU	A20 ARM Cortex-A7™ Dual-core
+GPU	ARM Mali-400 MP2 with Open GL ES 2.0/1.1
+
+BPI-M1
+香蕉派BPI-M1是一个廉价且强大的开源单板电脑，它搭载了全志的高性能双核芯片，它的主频是1GHZ、另外还有1GB的DDR3 SDRAM、千兆网口、SATA接口和HDMI接口。它可以跑Android, Lubuntu,Ubuntu, Debian, and Raspbian系统。
+CPU	A20 ARM Cortex-A7™ Dual-core
+GPU	ARM Mali-400 MP2 with Open GL ES 2.0/1.1
+
+BPI-R1
+香蕉派BPI-R1是一个能和M1跑一样系统的路由器。
+The R1是一个能跑很多操作系统（OpenWrt, Android,Bananian等）的开源路由器，R1还另外可以接3.5寸硬盘，它还有四个千兆LAN口，一个WAN口和一个300Mbs的无线网卡
+CPU	A20 ARM Cortex-A7™ Dual-core
+GPU	ARM Mali-400 MP2 with Open GL ES 2.0/1.1
+内存	1 GB DDR3 SDRAM
+
+BPI-D1
+香蕉派BPI-D1是一个板载能拍摄720P，30fps摄像头的微型开源IP摄像头。D1支持USB OTG，WiFi，外接电池，麦克风等，并可以在网页设置参数等
+CPU	400MHz ARM926EJ 32Bits RISC Core GPU	ARM Mali-400 MP2 with Open GL ES 2.0/1.1 内存	64MB DDR2
+
+BPI-G1  
+香蕉派BPI-G1是一个搭载了WIFI，蓝牙，ZigBee的微型网关  	STM32F103CB ARM Cortex™-M3 32-bit RISC core
+BPI-G1基于TI的高效、节能控制器，是个智能家居控制器。G1配备了了物联网系统以及手机应用，所以你可以很简单的连接到智能灯泡（好比自己写的OS）。
+Wi-Fi网络处理器（CC3100）包含一个Wi-Fi片上互联网和一个可完全免除应用MCU处理负担的专用ARM MCU。Wi-Fi片上互联网包含802.11b/g/n射频、基带和具有强大加密引擎的MAC，可以实现支持256位加密的快速安全的互联网连接。Wi-Fi片上互联网还包括嵌入式TCP/IP和TLS/SSL协议栈、HTTP服务器和多种互联网协议。CC3200支持站点、接入点和Wi-Fi直连3种模式，支持WPA2个人和企业安全性以及WPS2。这个设备包含了一系列外设：I2S, SD / MMC, UART, SPI, I2C 和四通道数模转换（ADC）。
+蓝牙4.0CC2540设备是一个低成本低功耗的蓝牙SoC。用它能用很低的成本搭建个强大的低功耗蓝牙主/从节点 。CC2540结合了优秀的RF收发器，业界标准的增强型8051 MCU，系统内可编程闪存，8 KB RAM和许多其他强大的辅助功能和外设。
+ZigbeeCC2530元件是基于IEEE802.15.4协议的Zigbee RF4CE应用和解决方案的真正的系统级芯片（SoC）。它使建立网络节点成本变得十分低。CC2530结合了领先的RF收发器，业界标准的增强型8051 MCU，系统内可编程闪存，8 KB RAM出色的性能和许多其他强大的功能。
+
+
+
+
+
+
+59.USB
+USB PD:USB Power Delivery功率传输协议，USB功率明年的新标准名为USBPD，USB PD 协议基于USB3.1，是USB3.1 中即type-c端口后提出的功率传输概念。可以为这种技术带来更大的灵活性，将充电能力扩大为目前的10倍：最高可达100瓦。Simon Daniel是科技公司Moixa的创始人，他目前就在伦敦的办公室里用加强版USB插口的原型产品为笔记本电脑充电。办公室里的低电压LED台灯也使用了同样的线路。电脑显示器、打印机和台式机同样如此。只有微波炉、热水壶等耗电大户才使用传统电源。
+
+
+
+
+
+
+
+
+
+
+
+
+
+60.FLOPS
+FLOPS，即每秒浮点运算次数[1]  （亦称每秒峰值速度）是每秒所执行的浮点运算次数（英文：Floating-point operations per second；缩写：FLOPS）的简称，被用来评估电脑效能，尤其是在使用到大量浮点运算的科学计算领域中。
+一个MFLOPS（megaFLOPS）等於每秒一佰万（=10^6）次的浮点运算，
+一个GFLOPS（gigaFLOPS）等於每秒拾亿（=10^9）次的浮点运算，
+一个TFLOPS（teraFLOPS）等於每秒万亿（=10^12）次的浮点运算，
+一个PFLOPS（petaFLOPS）等於每秒千万亿（=10^15）次的浮点运算，
+一个EFLOPS（exaFLOPS）等於每秒百亿亿（=10^18）次的浮点运算。
+
+C6655内核
+• 40 GMAC per Core for Fixed Point @ 1.25GHz
+• 20 GFLOP per Core for Floating Point @1.25 GHz
+
+循环神经网络（RNN）
+
+
+
+
+
+
+61.OpenCV
+pkg-config --modversion opencv
+
+
+
+
+
+
+62.GaN 氮化镓
+GaN材料的研究与应用是目前全球半导体研究的前沿和热点，是研制微电子器件、光电子器件的新型半导体材料，并与SIC、金刚石等半导体材料一起，被誉为是继第一代Ge、Si（锗  硅）半导体材料、第二代GaAs、InP（磷化铟）化合物半导体材料之后的第三代半导体材料。它具有宽的直接带隙、强的原子键、高的热导率、化学稳定性好（几乎不被任何酸腐蚀）等性质和强的抗辐照能力，在光电子、高温大功率器件和高频微波器件应用方面有着广阔的前景
+砷化镓 是Ⅲ-Ⅴ族元素化合的化合物，黑灰色固体，熔点1238℃。它在600℃以下，能在空气中稳定存在，并且不为非氧化性的酸侵蚀。砷化镓可作半导体材料，其电子迁移率高、介电常数小，能引入深能级杂质、电子有效质量小，能带结构特殊，可作外延片。
+
+
+
+
+
+
+
+63.STM32 BOOT0 BOOT1
+MODE            BOOT0    BOOT1
+User Flash        0        x
+ISP               1        0
+SRAM              1        1

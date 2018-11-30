@@ -1,0 +1,1309 @@
+int add(int a,int b)
+{
+    return (a + b);
+}
+
+int sub(int a, int b)
+{
+    return (a - b);
+}
+
+int mul(int a, int b)
+{
+    return (a * b);
+}
+
+int div(int a, int b)
+{
+    return (a / b);
+}
+
+#include <dlfcn.h>
+
+void *dlopen(const char *filename, int flag);
+
+char *dlerror(void);
+
+void *dlsym(void *handle, const char *symbol);
+
+int dlclose(void *handle);
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <dlfcn.h>
+
+//动态链接库路径
+#define LIB_CACULATE_PATH "./libcaculate.so"
+
+//函数指针
+typedef int (*CAC_FUNC)(int, int);
+
+int main()
+{
+    void *handle;
+    char *error;
+    CAC_FUNC cac_func = NULL;
+
+    //打开动态链接库
+    handle = dlopen(LIB_CACULATE_PATH, RTLD_LAZY); //RTLD_LAZY?暂缓决定，等有需要时再解出符号?RTLD_NOW?立即决定，返回前解除所有未决定的符号。
+    if (!handle) {
+    fprintf(stderr, "%s\n", dlerror());
+    exit(EXIT_FAILURE);
+    }
+
+    //清除之前存在的错误
+    dlerror();
+
+    //获取一个函数
+    *(void **) (&cac_func) = dlsym(handle, "add");
+    if ((error = dlerror()) != NULL)  {
+    fprintf(stderr, "%s\n", error);
+    exit(EXIT_FAILURE);
+    }
+    printf("add: %d\n", (*cac_func)(2,7));
+
+    cac_func = (CAC_FUNC)dlsym(handle, "sub");
+    printf("sub: %d\n", cac_func(9,2));
+
+    cac_func = (CAC_FUNC)dlsym(handle, "mul");
+    printf("mul: %d\n", cac_func(3,2));
+
+    cac_func = (CAC_FUNC)dlsym(handle, "div");
+    printf("div: %d\n", cac_func(8,2));
+
+    //关闭动态链接库
+    dlclose(handle);
+    exit(EXIT_SUCCESS);
+}
+
+
+
+***********************************************************************************************************************************************************
+
+
+
+
+
+#include <stdio.h>
+void main()
+{
+       int *p;
+       int a=2;
+       unsigned long b=1245048;
+       p=&a;
+       printf("%d/n",*p);
+       printf("%p/n",&a);
+       printf("%d/n",&a);
+       printf("%d/n",(void*)b);
+       //printf("%d/n",*(void*)b);  // 被注释的一行，运行此行会提示错误。
+       printf("%d/n",*(int*)p);
+       printf("%d/n",*(void**)p);
+}    
+ 
+P 为指向整型变量的指针。将 a 的地址赋予 p ，打印出 *p （解引用，即取该地址的值）为 2 。
+再打印出 &a ，即 a 地址，为 0012FF78 （参数 p 表示用指针的格式，即内存地址，打印出来）。
+再打印出 &a 的地址的十进制数字为 1245048( 参数 d 表示为十进制 ) 。
+定义一个整型变量 b ，赋值为 1245048 ( 即 unsigned long b=1245048;) 。
+如此， printf("%d/n",(void*)b); 表示：将 b 强制转换为一个指针，并打印出来。结果是 1245048 。
+为什么如此呢？因为此时 b 虽然转换为一个指针，但 printf 的时候却没加上 * 号，故此没进行解引用（也即是取该地址的值），因而打印出来的仍然是该指针的值。（注意区别指针的值，和该指针指向的地址的值）
+那么，加上 * 号进行解引用再打印出来，可否？实验结果不行，出现语法错误。概因 b 只是强制转换为指针，并没有指明是什么样类型（其实是 void 型）的指针。
+那么，强制转换的时候便声明该指针类型，可以吗？可以看看 printf("%d/n",*(int*)p); ，将 p 强制转换为 int* 类型的指针，解引用成功，输出 2 。
+最后来到我们的问题， *(void**)p 究竟是什么？相信看到这里你大概知道了。
+(void**) 代表的是指向指针的指针，如此，先 (void**)p ，即，将 p 强制转换为指向指针的指针，然后再给它加上一个 * 解引用，如此，便取得了该指针指向的地址的值， 2 。
+你可能会说，这里不也是声明为 void 型的指针了吗？这里行为什么上边不行呢？不，这里其实是不一样的。上边是void 型指针，本质即指针，而这里是 void 型的指针的指针，本质是指针的指针。 void 型指针，不知道指向的地址内容要怎么去引用它，而 void 型的指针的指针，却知道其指向的地址内容是一个地址。
+当然，我们也可以 printf("%d/n",*(int**)p); 输出结果是一样的。因为指向指针的指针本来就是指针（恩，有点拗口），只要类型正确，决定该指针输出什么的是其指向哪里的值，而不是指针本身。
+我们可以做个试验， printf("%d/n",*(int****)p); ，看起来很晕吧，将 p 转换为指向指针的指针的指针的指针，结果呢？一样都是 2 。
+
+
+
+
+
+
+***********************************************************************************************************************************************************
+
+
+
+#include <iostream>    
+#include <string.h>    
+using namespace std;      
+class Teacher    
+{    
+    public:    
+    Teacher(char *temp)    
+    {    
+        director = new char[10];    
+        strcpy(director,temp);    
+    }  
+    ~Teacher()    
+    {    
+        cout<<"释放堆区director内存空间1次";    
+        delete[] director;    
+        cin.get();  
+    }    
+    char *show();    
+    protected:    
+    char *director;    
+};    
+char *Teacher::show()    
+{    
+    return director;    
+}    
+class Student    
+{    
+    public:    
+    Student(char *temp,int &pk):teacher(temp),pk(pk),ps(10)  
+    {    
+        number = 1;    
+        score = 100;  
+    }    
+    void show();    
+    
+    protected:    
+    int number;    
+    int score;    
+    Teacher teacher;  
+    int &pk;  
+    const int ps;  
+    
+};    
+    
+void Student::show()    
+{    
+    cout<<"";
+}    
+int main()    
+{    
+    char *t_name="王大力";  
+    int b=99;  
+    Student a(t_name,b);  
+    a.show();  
+    cin.get();  
+}
+
+
+
+***********************************************************************************************************************************************************
+
+
+
+
+#include <stdio.h>
+#include <stddef.h>
+
+// listnode类型的声明，里面只有两个指针prev,next
+typedef struct _listnode {
+    struct _listnode *prev;
+    struct _listnode *next;
+} listnode;
+
+// 使用listnode时最关键的宏
+#define node_to_item(node, container, member) \
+    (container *) (((char*) (node)) - offsetof(container, member))
+
+// 给链表添加节点
+void list_add_tail(listnode *list, listnode *node)  {
+    //list->prev->next = node;
+    //node->prev = list->prev;
+    //node->next = list;
+    //list->prev = node;
+     list->next->prev = node;
+     node->next = list->next;
+     node->prev = list;
+     list->next = node;
+}
+
+// 每个listnode节点对应“存储”的数据信息，其中竟然有一个listnode类型的成员变量？
+typedef struct _node {
+    listnode list;
+    int data;
+} node;
+
+// 建立一个有三个节点的双向链表，并遍历输出一遍。
+int main() {
+    node n1, n2, n3, *n;
+    listnode list, *p;
+    n1.data = 1;
+    n2.data = 2;
+    n3.data = 3;
+
+    //list.prev = list.next = &list;
+    list.next = list.prev = list;
+    list_add_tail(&list, &n1.list);
+    list_add_tail(&list, &n2.list);
+    list_add_tail(&list, &n3.list);
+
+    for(p = list.next; p != &list; p = p->next) {
+        n = node_to_item(p, node, list);
+        printf("%d\n", n->data);
+	printf("%x\n",p);
+    }
+	//printf("%d\n",sizeof(node));
+	//printf("%d\n",sizeof(int));
+	printf("%d\n",sizeof(listnode));
+    return 0;
+}
+
+
+***********************************************************************************************************************************************************
+#include "stdio.h"
+void main()
+{
+       int *p;
+       int a=2;
+       unsigned long b=1245048;
+       p=&a;
+       printf("%d\n",*p);
+       printf("%p\n",&a);
+       printf("%d\n",&a);
+       printf("%d\n",(void*)b);
+       //printf("%d\n",*(void*)p);  // 被注释的一行，运行此行会提示错误。
+       printf("%d\n",*(int*)p);
+       printf("%d\n",*(void**)p);
+printf("%d\n",*(int**)p);
+}    
+
+
+
+
+
+
+
+***********************************************************************************************************************************************************
+#include "stdio.h"
+struct s
+{ 
+int x, *y; /* y: 结构中的成员是指向整型的指针 */
+} *p; /* p: 指向结构的指针 */
+int data[5]={10, 20, 30, 40, 50,}; /* data: 整型数组 */
+struct s array[5]=
+{ 
+100, &data[0], 
+200, &data[1], 
+300, &data[2],
+400, &data[3], 
+500, &data[4]
+}; /* array: 结构数组 */
+main ( )
+{ p=array; /* 指针p指向结构数组的首地址 */
+printf ("For printer:\n");
+printf ("%d\n", p->x);//100
+printf ("%d\n", (*p).x); //100
+printf ("%d\n", *p->y);//10
+printf ("%d\n", *(*p).y);//10
+printf ("%d\n", ++p->x);//101
+printf ("%d\n", (++p)->x);//200
+printf ("%d\n", p->x++);//200
+printf ("%d\n", p->x); //201
+printf ("%d\n", ++ (*p->y));//21
+printf ("%d\n", ++ * p->y); //22
+printf ("%d\n", * ++ p->y);//30
+printf ("%d\n", p->x); //201
+printf ("%d\n", * (++p)->y);//30
+printf ("%d\n", p->x); //300
+printf ("%d\n", * p->y ++);//30
+printf ("%d\n", p->x); //300
+printf ("%d\n", * (p->y) ++);//40
+printf ("%d\n", p->x); //300
+printf ("%d\n", * p ++ ->y);//50
+printf ("%d\n", p->x);//400
+}
+
+
+
+
+
+
+***********************************************************************************************************************************************************
+
+#include <stdio.h>
+#define STNUM 3 /* 全班同学人数 */
+struct stuinf
+{ int stid; /* 学生学号 */
+int score; /* 学生成绩 */
+} stu[STNUM]; /* stu: 结构数组 */
+main ( )
+{ struct stuinf *ptemp, /* ptemp:指向结构的指针, 临时变量 */
+*p[STNUM]; /* p:指向结构的指针构成的指针数组 */
+int i, j, k, sum=0; /* i,j,k:临时变量；sum:分数累计 */
+for (i=0; i<=STNUM-1; i++) /* 输入学生的学号和成绩 */
+{ scanf ("%d%d", &stu[i].stid, &stu[i].score); /* 输入学生的学号和成绩 */
+p[i] = &stu[i];
+/* 指针数组p[i]的第i个指针(元素)指向结构数组的第i个元素 */
+sum += stu[i].score;/* 累计学生的分数 */
+}
+for ( i=0; i<=STNUM-2; i++ ) /* 排序操作 */
+{ k = i; /* k：在第i次循环中，指向当前最高分的指针在指针数组p中的下标 */
+for (j=i; j<=STNUM-1; j++)
+if (p[k]->score < p[j]->score) k=j;
+/* 查找当前最大值, k中存放最大值对应的指针在指针数组p中的下标 */
+if ( k!=i ) /* 当k不等于i时，交换两个指向结构的指针 */
+{ ptemp = p[i];
+p[i] = p[k];
+p[k] = ptemp;
+}
+}
+for (i=0; i<=STNUM-1; i++) /* 按排序顺序输出学号和成绩 */
+printf("%d,%d\n", (*p[i]).stid, p[i]->score);
+printf ("average score = %d\n", sum/STNUM); /* 输出平均分 */
+}
+
+
+
+***********************************************************************************************************************************************************
+
+#include "stdio.h"
+int main()
+{
+	char ch[3][4]={"AAA","BB","CCC"},(*q)[4]=ch;//,*p;
+	//p=&char;
+	char *p='b';
+	*(*q+3)='b';
+	printf("%d\n",(*q)[4]);
+	printf("%d\n",*q);
+	printf("%s\n",q[0]);//AAAbBB
+	printf("%s\n",q[1]);
+	printf("%s\n",q[2]);
+	//printf("%s\n",q[3]);
+}
+
+
+***********************************************************************************************************************************************************
+#include<stdio.h>
+#include<string.h>
+typedef struct _AKSC_DOEAGVAR AKSC_DOEAGVAR; 
+
+struct _AKSC_DOEAGVAR {
+char yl1;
+float yl2;
+double yl3;
+};
+
+typedef struct _AKSCPRMS {
+int ccl1;
+char ccl2;
+float ccl3;
+AKSC_DOEAGVAR *ccl4;
+} AKSCPRMS;
+
+int c_prms[];
+
+int main()
+{
+	AKSCPRMS *prms = (AKSCPRMS *)c_prms;
+    	memset(prms, 0, 4000);
+	prms->ccl4 = (AKSC_DOEAGVAR *)(((char *)prms)+100);
+	printf("ccl %d\n",((char *)prms));//6295628
+	printf("ccl %d\n",prms);//6295628
+	printf("ccl %d\n",c_prms);//6295628
+}
+***********************************************************************************************************************************************************
+#include<stdio.h>
+#include<string.h>
+int main()
+{
+   char   str1[8] ;
+char str2[]="AA\0BB";
+strcpy(str1,str2);
+
+  printf("%s\n",str1);
+}
+
+
+
+***********************************************************************************************************************************************************
+#include<stdio.h>
+#include<string.h>
+enum Color
+{
+GREEN = 1,
+RED,
+BLUE,
+GREEN_RED = 10,
+GREEN_BLUE
+}ColorVal;
+
+#pragma pack(8)
+struct TestStruct4
+{
+char a;
+int b;
+};
+struct TestStruct5
+{
+char c;
+struct TestStruct4 d;
+long long e;
+};
+#pragma pack()
+int main()
+{
+/*int *p = NULL;
+int a[100];
+  printf("%d\n",sizeof(p));
+  printf("%d\n",sizeof(*p));
+  printf("%d\n",sizeof(a));
+  printf("%d\n",sizeof(a[100]));
+  printf("%d\n",sizeof(&a));
+  printf("%d\n",sizeof(&a[0]));
+char b[1000];
+int i;
+for(i=0; i<1000; i++)
+{
+b[i] = -1-i;
+}
+printf("%d\n",strlen(b));
+
+ i = -20;
+unsigned j = 10;
+printf("%d\n",i+j);*/
+/*for (j=9;j>=0;j--)
+{
+printf("%u\n",j);
+}
+union
+{
+int i;
+char a;
+}*p, u;
+p=&u;
+//p->a[0] = 0x39;
+//p->a[1] = 0x38;
+p->i=1;
+printf("%d\n",p->a);
+
+int a[5]={1,2,3,4,5};
+int *ptr1=(int *)(&a+1);
+//int *ptr2=(int *)((int)a+1);
+//printf("%x,%x",ptr1[-1],*ptr2);
+printf("%x\n",ptr1[-1]);
+printf("%x\n",a);
+printf("%x\n",&a[0]);
+printf("%x\n",&a[1]);
+printf("%x\n",&a[2]);
+printf("%x\n",&a[3]);
+printf("%x\n",&a[4]);
+printf("%x\n",&a+1);
+
+//printf("%d\n",sizeof(ColorVal));
+printf("%d\n",sizeof(struct TestStruct5));//24  TestStruct4 long b result is 32
+
+
+int a[5]={1,2,3,4,5};
+int *ptr=(int *)(&a+1);
+printf("%d,%d",*(a+1),*(ptr-1));*/
+
+
+}
+
+
+
+***********************************************************************************************************************************************************
+#include<stdio.h>
+#include<string.h>
+/*
+struct Test
+{
+int Num;
+char *pcName;
+short sDate;
+char cha[2];
+short sBa[4];
+}*p;
+
+char * fun1(char * p)
+{
+printf("%s\n",p);
+return p;
+}
+char * fun2(char * p)
+{
+printf("%s\n",p);
+return p;
+}
+char * fun3(char * p)
+{
+printf("%s\n",p);
+return p;
+}
+*/
+struct student
+{
+char *name;
+int score;
+
+}stu,*pstu;
+
+int main()
+{
+/*
+printf("%d\n",sizeof(p));//8
+printf("%d\n",sizeof(*p));//64bit 32  32bit 20
+
+int a[4]={1,2,3,4};
+int *ptr1=(int *)(&a+1);
+int *ptr2=(int *)(a+1);
+//printf("%x,%x",ptr1[-1],*ptr2);
+printf("%x\n",ptr1[-1]);//4
+printf("%x\n",*ptr2);//2
+
+int a[3][2]={(0,1),(2,3),(4,5)};
+int *p;
+p=a[0];
+printf("%d\n",p[0]);
+int b[3][2]={0,1,2,3,4,5};
+p=b[0];
+printf("%d\n",p[0]);
+int c[3][2]={{0,1},{2,3},{4,5}};
+p=c[0];
+printf("%d\n",p[0]);
+
+int a[5][5];
+int (*p)[4];
+p=a;
+printf("%d\n",&p[4][2] - &a[4][2]);//-4
+
+
+char * (*a[3])(char * p);
+char * (*(*pf)[3])(char * p);
+pf = &a;
+a[0] = fun1;
+a[1] = &fun2;
+a[2] = &fun3;
+pf[0][0]("ccl1");
+pf[0][1]("ccl2");
+*/
+
+strcpy(stu.name,"Jimy");
+stu.score = 99;
+printf("ccl\n");//Segmentation fault
+}
+
+
+
+***********************************************************************************************************************************************************
+
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
+typedef unsigned char  uint8;
+typedef short          int16;
+typedef unsigned short uint16;
+typedef int          int32;
+typedef unsigned int uint32;
+typedef long long int64;
+
+typedef struct {
+    int32 data[3];
+	int64 timestamp;
+} akm_input_data_s;
+
+/*typedef struct
+{
+	akm_input_data_s event;
+	DATA_BUFFER next;
+}DATA_BUFFER;
+*/
+typedef struct _mag_data_buffer {
+		akm_input_data_s event;
+		struct _mag_data_buffer *next;
+} DATA_BUFFER;
+
+int akm_buffer_count = 0;
+DATA_BUFFER *data_buffer_p = NULL;
+
+int AKM_InsertDataToBuffer(DATA_BUFFER * data_buffer_temp)
+{
+		DATA_BUFFER *temp_p = data_buffer_p;
+		DATA_BUFFER *p = NULL;
+		akm_buffer_count++;
+		if (data_buffer_p == NULL) {
+				data_buffer_p = data_buffer_temp;
+		} else {
+				while (temp_p->next != NULL) {
+						if ((data_buffer_temp->event.timestamp > temp_p->event.timestamp)
+							&& (data_buffer_temp->event.timestamp < temp_p->next->event.timestamp)) {
+								p = temp_p->next;
+								temp_p->next = data_buffer_temp;
+								data_buffer_temp->next = p;
+								p = NULL;
+								return 0;
+						} else {
+								temp_p = temp_p->next;
+						}
+				}
+				if (temp_p->next == NULL) {
+						if (data_buffer_temp->event.timestamp > data_buffer_p->event.timestamp) {
+								temp_p->next = data_buffer_temp;
+						} else {
+								data_buffer_temp->next = data_buffer_p;
+								data_buffer_p = data_buffer_temp;
+						}
+				}
+		}
+		return 0;
+}
+
+int AKM_GetDataFromBuffer(akm_input_data_s * result)
+{
+		DATA_BUFFER *data_buffer_temp;
+		memcpy(result, &data_buffer_p->event, sizeof(akm_input_data_s));
+		if(akm_buffer_count == 10) {
+				data_buffer_temp = data_buffer_p->next;
+				free(data_buffer_p);
+				data_buffer_p = data_buffer_temp;
+				akm_buffer_count--;
+		}
+		return 0;
+}
+
+int AKM_DataFilter(akm_input_data_s * input)
+{
+		DATA_BUFFER *data_buffer_temp =
+			(DATA_BUFFER *)malloc(sizeof(DATA_BUFFER));
+		int ret = 0;
+		memcpy(&data_buffer_temp->event, input,
+					   sizeof(akm_input_data_s));
+		data_buffer_temp->next = NULL;
+		ret = AKM_InsertDataToBuffer(data_buffer_temp);
+		if (ret) {
+				return -1;
+		}
+
+		ret = AKM_GetDataFromBuffer(input);
+		if (ret) {
+				return -1;
+		}
+		return ret;
+}
+
+
+int main()
+{
+	akm_input_data_s input_data;
+	input_data.data[0]=0;
+	input_data.data[1]=0;
+	input_data.data[2]=0;
+	input_data.timestamp=100;
+	AKM_DataFilter(&input_data);
+	input_data.data[0]=1;
+	input_data.data[1]=1;
+	input_data.data[2]=1;
+	input_data.timestamp=50;
+	AKM_DataFilter(&input_data);
+	printf("%d,%lld\n",input_data.data[0],input_data.timestamp);
+}
+
+***********************************************************************************************************************************************************
+
+#include<stdio.h>
+#include<string.h>
+
+typedef unsigned char  uint8;
+typedef short          int16;
+typedef unsigned short uint16;
+typedef int          int32;
+typedef unsigned int uint32;
+
+/* Algorithm parameters  */
+//#define MAX_TS_ERROR	2
+//#define DETECT_TIME		1024 /* 1.0 @ Q.10 */
+//#define SIGMA_INIT		3072 /* 3.0 @ Q.10 */
+//#define SIGMA_COEF		7680 /* 7.5 @ Q.10 */
+/* Note : SIGMA_COEF
+   No filter	7.515444
+   Fc = 0.9Hz	16.808853
+   Fc = 0.45Hz	23.764873 */
+
+/* Tsensor error [deg] */
+#define TS_ERROR		3072 /* 3.0 @ Q.10 */
+
+/* Time constants
+   Unit [sec]		*/
+//#define IR_LPF_TCONST_U	10240 /* 10.0 @ Q.10 */
+//#define IR_LPF_TCONST_D	4090  /* 4.0 @ Q.10 */
+#define DELTA_TCONST	102400   /* 100.0 @ Q.10 */
+//#define SIGMA_TCONST	102400   /* 100.0 @ Q.10 */
+
+/* Input data interval
+   Unit [sec] */
+#define INPUT_DT		128 /* 1.0 at Q.10 *///ccl
+
+/* valid range of parameters */
+#define MAX_DELTA25 24576
+
+/* Constant value square root 2 */
+#define SQRT2			1448 /* sqrt(2) at Q.10 */
+
+/* Macro operator */
+#define MAX(x,y) (x > y ? x : y)
+#define MIN(x,y) (x < y ? x : y)
+#define ABSVALUE(x) (x > 0 ? x : -x)
+
+/* fixed-point parameters */
+#define FP_SHIFT_10 (10)
+#define TS_SHIFT_9 (9)
+#define TMP_SHIFT_6 (6) /* for internal calculation */
+
+static int32 CalcDeltaScale(int32 ts_deg)
+{
+	int32 scale;     /* Q.FP_SHIFT_10 */
+	int32 tmp_scale; /* Q.FP_SHIFT_10 */
+	int32 ts_diff;
+
+	/* scale = MAX(MIN((-(ts_deg + TS_ERROR - 25.0) / 15.0 + 1.0), 4.0/3.0), */
+	/*             2.0/3.0) */
+//printf("ts=%d\n",ts_deg);
+	ts_diff = ts_deg + TS_ERROR - (25 << FP_SHIFT_10);
+//printf("ts_diff=%d\n",ts_diff);
+	/* 1/15 => 68 @ Q.10 */
+	tmp_scale = (((-ts_diff * 68) >> FP_SHIFT_10) + (1 << FP_SHIFT_10));
+printf("tmp_scale=%d\n",tmp_scale);
+	/* 4/3 => 1365 @ Q.10 */
+	/* 2/3 =>  683 @ Q.10 */
+	scale = MAX(MIN(tmp_scale, 1365), 683);
+
+	return scale;
+}
+
+static int32 CalcDelta(int16 ts, int32 delta, uint16 delta_25deg)
+{
+	int32 gamma;  /* Q.FP_SHIFT_10 */
+	int32 ts_deg; /* Q.FP_SHIFT_10 */
+	int32 ret;    /* Q.FP_SHIFT_10 */
+	int32 old_value; /* Q.TMP_SHIFT_6 */
+	int32 new_value; /* Q.TMP_SHIFT_6 */
+
+
+	gamma = ((int32)INPUT_DT << FP_SHIFT_10) / DELTA_TCONST;
+//printf("gamma=%d\n",gamma);
+	/* ts[deg] = ts[code] * 0.00198 + 25 */
+	ts_deg = ((int32)ts << (FP_SHIFT_10 - TS_SHIFT_9)) + (25 << FP_SHIFT_10);
+//printf("ts_deg=%d\n",ts_deg);
+	old_value = delta >> (FP_SHIFT_10 - TMP_SHIFT_6);
+	new_value = (delta_25deg * CalcDeltaScale(ts_deg)) >> (FP_SHIFT_10 - TMP_SHIFT_6);
+//printf("old=%d\n",old_value);
+//printf("new=%d\n",new_value);
+	/* ret = ((1 - gamma) * delta + gamma * d) */
+	/*
+	 * overflow check:
+	 *  max of gamma = 0x0400
+	 *  max of d = ((24576 * 1365) >> 4) * 1024 = 0x7ff80000 < INT32MAX
+	 */
+	ret = ((((1 << FP_SHIFT_10) - gamma) * old_value
+			+ gamma * new_value) >> TMP_SHIFT_6);
+//printf("ret=%d\n",ret >> FP_SHIFT_10);
+	return ret;
+}
+
+int main()
+{
+	int32 ts_deg,delta;
+	uint16 delta_25deg =97;
+	int16 ts = 0;
+	ts_deg = (ts << (FP_SHIFT_10 - TS_SHIFT_9)) + (25 << FP_SHIFT_10);
+
+	delta = delta_25deg * CalcDeltaScale(ts_deg);
+	printf("%d\n",delta >> FP_SHIFT_10);
+	//ts = 0;//
+	delta = CalcDelta(ts, delta, delta_25deg);
+	printf("%d\n",delta >> FP_SHIFT_10);
+
+	/*delta = CalcDelta(ts, delta, delta_25deg);
+	printf("%d\n",delta >> FP_SHIFT_10);
+
+	delta = CalcDelta(ts, delta, delta_25deg);
+	printf("%d\n",delta >> FP_SHIFT_10);
+
+	delta = CalcDelta(ts, delta, delta_25deg);
+	printf("%d\n",delta >> FP_SHIFT_10);
+
+	delta = CalcDelta(ts, delta, delta_25deg);
+	printf("%d\n",delta >> FP_SHIFT_10);*/
+}
+
+
+
+
+***********************************************************************************************************************************************************
+
+#include<stdio.h>
+#include<string.h>
+
+typedef unsigned char  uint8;
+typedef short          int16;
+typedef unsigned short uint16;
+typedef int          int32;
+typedef unsigned int uint32;
+typedef float float32;
+
+#define MAX_TS_ERROR	2
+#define SIGMA_INIT		3.0
+#define SIGMA_COEF		16.8
+/* Note : SIGMA_COEF
+   No filter	7.515444
+   Fc = 0.9Hz	16.808853
+   Fc = 0.45Hz	23.764873 */
+
+/* Tsensor error [deg] */
+#define	TS_ERROR		3.0
+
+/* Time constants
+   Unit [sec]		*/
+#define IR_LPF_TCONST_U	10.0
+#define IR_LPF_TCONST_D	4.0
+#define DELTA_TCONST	100.0
+#define SIGMA_TCONST	100.0
+
+/* Input data interval
+   Unit [sec] */
+#define INPUT_DT		0.1
+
+/* Constant value square root 2 */
+#define SQRT2			1.414
+
+/* Macro operator */
+#define MAX(x,y) (x > y ? x : y)
+#define MIN(x,y) (x < y ? x : y)
+#define ABSVALUE(x) (x > 0 ? x : -x)
+
+static float32 CalcDeltaScale(float32 ts_deg)
+{
+	float32 scale;
+
+	scale = MAX(MIN((-(ts_deg + TS_ERROR - 25.0) / 15.0 + 1.0), 4.0/3.0), 2.0/3.0);
+
+	return scale;
+}
+
+static float32 CalcDelta(int16 ts, float32 delta, int16 delta_25deg)
+{
+	float32 gamma;
+	float32 d;
+	float32 ts_deg;
+	
+	gamma = INPUT_DT / DELTA_TCONST;
+	ts_deg = ts * 0.00198 + 25.0;
+
+	d = delta_25deg * CalcDeltaScale(ts_deg);
+
+	return ((1 - gamma) * delta + gamma * d);
+}
+
+int main()
+{
+	float32 ts_deg,delta;
+	uint16 delta_25deg =97;
+	int16 ts = 0;
+	ts_deg = ts * 0.00198 + 25.0;
+
+	delta = delta_25deg * CalcDeltaScale(ts_deg);
+	printf("%f\n",delta);
+	//ts = 0;//
+	delta = CalcDelta(ts, delta, delta_25deg);
+	printf("%f\n",delta);
+
+	/*delta = CalcDelta(ts, delta, delta_25deg);
+	printf("%d\n",delta >> FP_SHIFT_10);
+
+	delta = CalcDelta(ts, delta, delta_25deg);
+	printf("%d\n",delta >> FP_SHIFT_10);
+
+	delta = CalcDelta(ts, delta, delta_25deg);
+	printf("%d\n",delta >> FP_SHIFT_10);
+
+	delta = CalcDelta(ts, delta, delta_25deg);
+	printf("%d\n",delta >> FP_SHIFT_10);*/
+}
+
+
+
+
+
+
+***********************************************************************************************************************************************************
+#include<stdio.h>
+#include<string.h>
+
+
+static float ORI360[ ] = {
+	0,0.5,1,1.5,2,2.5,3,3.5,4,5.5,7,8.5,10,11.5,13,14.5,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30.5,32,33.5,35,
+	36.5,38,39.5,41,41.5,42,42.5,43,43.5,44,44.5,45,45.5,46,46.5,47,47.5,48,48.5,49,50.5,52,53.5,55,56.5,58,59.5,
+	61,62,63,64,65,66,67,68,69,70,71,72,73,74,75.5,77,78.5,80,81.5,83,84.5,86,86.5,87,87.5,88,88.5,89,89.5,90,90.5,
+	91,91.5,92,92.5,93,93.5,94,95.5,97,98.5,100,101.5,103,104.5,106,107,108,109,110,111,112,113,114,115,116,117,118,
+	119,120.5,122,123.5,125,126.5,128,129.5,131,131.5,132,132.5,133,133.5,134,134.5,135,135.5,136,136.5,137,137.5,138,
+	138.5,139,140.5,142,143.5,145,146.5,148,149.5,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165.5,167,168.5,
+	170,171.5,173,174.5,176,176.5,177,177.5,178,178.5,179,179.5,180,180.5,181,181.5,182,182.5,183,183.5,184,185.5,187,188.5,
+	190,191.5,193,194.5,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210.5,212,213.5,215,216.5,218,219.5,221,221.5,
+	222,222.5,223,223.5,224,224.5,225,225.5,226,226.5,227,227.5,228,228.5,229,230.5,232,233.5,235,236.5,238,239.5,241,242,243,244,
+	245,246,247,248,249,250,251,252,253,254,255.5,257,258.5,260,261.5,263,264.5,266,266.5,267,267.5,268,268.5,269,269.5,270,270.5,
+	271,271.5,272,272.5,273,273.5,274,275.5,277,278.5,280,281.5,283,284.5,286,287,288,289,290,291,292,293,294,295,296,297,298,299,
+	300.5,302,303.5,305,306.5,308,309.5,311,311.5,312,312.5,313,313.5,314,314.5,315,315.5,316,316.5,317,317.5,318,318.5,319,320.5,
+	322,323.5,325,326.5,328,329.5,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345.5,347,348.5,350,351.5,353,354.5,356,
+	356.5,357,357.5,358,358.5,359,359.5,
+};
+
+static float input_data[ ] = {
+//1,4,8,13,18,26,29,39,44,47,52,60,65,72,73,78,81,86,92,100,104,110,115,119,124,132,134,139,146,149,153,157,162,168,172,175,178,180,186,
+//189,192,197,199,203,210,213,217,224,227,235,242,247,252,260,266,268,275,280,289,295,299,304,308,313,320,326,330,335,340,342,348,355,
+//351,357,2,8,13,18,24,29,37,40,47,52,57,62,67,70,75,80,85,88,93,97,101,105,109,113,119,124,128,132,138,143,150,155,162,166,173,179,186,193,
+//199,204,211,216,224,229,236,241,244,249,256,260,264,267,271,276,279,284,288,292,297,300,304,307,313,317,322,329,334,338,343,349,
+2,8,13,19,23,26,31,37,42,47,52,60,64,69,74,82,86,91,96,102,109,114,118,123,128,132,136,141,145,149,153,157,162,166,171,174,176,181,184,190,
+193,197,200,206,209,214,219,222,228,232,237,243,250,256,262,268,271,279,286,292,297,303,309,316,321,327,331,336,342,347,353,356,  
+};
+int main()
+{
+	float ori;
+	int orint,i;
+	for(i = 0;i < 72;i++){
+		orint = (int)input_data[i];
+		//ALOGE("inputdata=%f,orint=%d\n",input_data,orint);
+	if(input_data[i] >= 359.5 && input_data[i] <= 360)
+		ori = (input_data[i] + 360) / 2;
+	else if(input_data[i] >= 0 && input_data[i] <= 0.5)
+		ori = input_data[i] / 2;
+	else if(input_data[i] < ((float)orint + 0.5f))
+		ori = (input_data[i] + ORI360[orint-1] + ORI360[orint]) / 3;
+	//ALOGE("data1=%f,%f,%f,%f\n",input_data,ORI360[orint-1],ORI360[orint],ori);
+	else
+		ori = (input_data[i] + ORI360[orint] + ORI360[orint+1]) / 3;
+		//ALOGE("data2=%f,%f,%f,%f\n",input_data,ORI360[orint],ORI360[orint+1],ori);
+
+printf("%f\n",ori);//-4
+	}	
+
+
+
+}
+
+
+
+
+***********************************************************************************************************************************************************
+#include<stdio.h>
+#include<string.h>
+
+static int ccl(int *pat, int num)
+{
+    switch (num) {
+    case 1://6
+	     *pat  = (0 << 8); // [8]   = sign_x
+	     *pat += (0 << 7); // [7]   = sign_y
+	     *pat += (0 << 6); // [6]   = sign_z
+	     *pat += (0 << 4); // [5:4] = order_x
+	     *pat += (1 << 2); // [3:2] = order_y
+	     *pat += (2 << 0); // [1:0] = order_z
+        break;
+    case 2://146
+	     *pat  = (0 << 8); // [8]   = sign_x
+	     *pat += (1 << 7); // [7]   = sign_y
+	     *pat += (0 << 6); // [6]   = sign_z
+	     *pat += (1 << 4); // [5:4] = order_x
+	     *pat += (0 << 2); // [3:2] = order_y
+	     *pat += (2 << 0); // [1:0] = order_z
+        //tmp = vec->u.x;
+        //vec->u.x = vec->u.y;
+        //vec->u.y = -tmp;
+        break;
+    case 3:
+	     *pat  = (1 << 8); // [8]   = sign_x
+	     *pat += (1 << 7); // [7]   = sign_y
+	     *pat += (0 << 6); // [6]   = sign_z
+	     *pat += (0 << 4); // [5:4] = order_x
+	     *pat += (1 << 2); // [3:2] = order_y
+	     *pat += (2 << 0); // [1:0] = order_z
+        //vec->u.x = -(vec->u.x);
+        //vec->u.y = -(vec->u.y);
+        break;
+    case 4:
+	     *pat  = (1 << 8); // [8]   = sign_x
+	     *pat += (0 << 7); // [7]   = sign_y
+	     *pat += (0 << 6); // [6]   = sign_z
+	     *pat += (1 << 4); // [5:4] = order_x
+	     *pat += (0 << 2); // [3:2] = order_y
+	     *pat += (2 << 0); // [1:0] = order_z
+        //tmp = vec->u.x;
+        //vec->u.x = -(vec->u.y);
+        //vec->u.y = tmp;
+        break;
+    // Reverse
+    case 5:
+	     *pat  = (1 << 8); // [8]   = sign_x
+	     *pat += (0 << 7); // [7]   = sign_y
+	     *pat += (1 << 6); // [6]   = sign_z
+	     *pat += (0 << 4); // [5:4] = order_x
+	     *pat += (1 << 2); // [3:2] = order_y
+	     *pat += (2 << 0); // [1:0] = order_z
+        //vec->u.x = -(vec->u.x);
+        //vec->u.z = -(vec->u.z);
+        break;
+    case 6:
+	     *pat  = (0 << 8); // [8]   = sign_x
+	     *pat += (0 << 7); // [7]   = sign_y
+	     *pat += (1 << 6); // [6]   = sign_z
+	     *pat += (1 << 4); // [5:4] = order_x
+	     *pat += (0 << 2); // [3:2] = order_y
+	     *pat += (2 << 0); // [1:0] = order_z
+        //tmp = vec->u.x;
+        //vec->u.x = vec->u.y;
+        //vec->u.y = tmp;
+        //vec->u.z = -(vec->u.z);
+        break;
+    case 7:
+	     *pat  = (0 << 8); // [8]   = sign_x
+	     *pat += (1 << 7); // [7]   = sign_y
+	     *pat += (1 << 6); // [6]   = sign_z
+	     *pat += (0 << 4); // [5:4] = order_x
+	     *pat += (1 << 2); // [3:2] = order_y
+	     *pat += (2 << 0); // [1:0] = order_z
+        //vec->u.y = -(vec->u.y);
+        //vec->u.z = -(vec->u.z);
+        break;
+    case 8:
+	     *pat  = (1 << 8); // [8]   = sign_x
+	     *pat += (1 << 7); // [7]   = sign_y
+	     *pat += (1 << 6); // [6]   = sign_z
+	     *pat += (1 << 4); // [5:4] = order_x
+	     *pat += (0 << 2); // [3:2] = order_y
+	     *pat += (2 << 0); // [1:0] = order_z
+        //tmp = vec->u.x;
+        //vec->u.x = -(vec->u.y);
+        //vec->u.y = -tmp;
+        //vec->u.z = -(vec->u.z);
+        break;
+    default:
+        return 0;
+    }
+}
+int main()
+{
+  int bdata,i;
+  for(i=1;i<9;i++){
+  	ccl(&bdata,i);	
+	printf("%d\n",bdata);}
+/*
+6
+146
+390
+274
+326
+82
+198
+466
+*///akm
+}
+
+
+
+
+***********************************************************************************************************************************************************
+
+#include<stdio.h>
+#include<string.h>
+
+typedef unsigned char  uint8;
+typedef short          int16;
+typedef unsigned short uint16;
+typedef int          int32;
+typedef unsigned int uint32;
+
+//========================= Vectors =====================================//
+typedef union _int16vec { // Three-dimensional vector constructed of signed 16 bits fixed point numbers
+    struct {
+        int16 x;
+        int16 y;
+        int16 z;
+    } u;
+    int16 v[3];
+} int16vec;
+
+typedef union _int32vec { // Three-dimensional vector constructed of signed 32 bits fixed point numbers
+    struct {
+        int32 x;
+        int32 y;
+        int32 z;
+    } u;
+    int32 v[3];
+} int32vec;
+
+//========================= Matrix ======================================//
+typedef union _I16MATRIX {
+    struct {
+        int16 _11, _12, _13;
+        int16 _21, _22, _23;
+        int16 _31, _32, _33;
+    } u;
+    int16 m[3][3];
+} I16MATRIX;
+
+
+
+//========================= Quaternion ===================================//
+// Quaternion constructed of signed 16 bits fixed point numbers
+typedef union _I16QUAT {
+    struct {
+        int16 w;
+        int16 x;
+        int16 y;
+        int16 z;
+    } u;
+    int16 q[4];
+} I16QUAT;
+
+typedef struct _AKSC_HFLUCVAR {
+    int16vec href;             // Basis of magnetic field
+    int16    th;               // The range of fluctuation
+} AKSC_HFLUCVAR;
+
+typedef struct _AKSC_DOEAGVAR AKSC_DOEAGVAR; 
+
+typedef struct _AKSC_HDOEVAR {         // Variables necessary for DOE calculation
+    void     **HTH;                    // [AKSC_NUM_HCOND][AKSC_MAX_HDOE_LEVEL]
+    int16    hdoeCnt;                  // DOE counter
+    int16    hdoeLv;                   // HDOE level
+    int16    hrdoe;                    // Geomagnetic vector size
+    int16    hthIdx;                   // Index of HTH. This value can be from 0 to AKSC_NUM_HCOND-1
+
+    void     **HTHHR;                  // [AKSC_NUM_HCOND or 1][AKSC_MAX_HDOE_LEVEL or 1]
+
+    int16    hrdoeHR;
+
+    int16    reserved;                 // Reserve
+} AKSC_HDOEVAR;
+
+struct _AKSC_DOEAGVAR {
+    AKSC_HDOEVAR    hdoev;                       // variables necessary for DOE calculation
+    int16           htBase;                      // base value of time [Q4 ms]
+    int16           preGt;                       // previous elapsed time of gyro data [Q4 ms]
+    int16           validDataCnt;                // valid data count
+    int16           lv;                          // current accuracy level of HDOEaG
+    int16           sucCnt;                      // success counter
+
+};
+typedef struct _AKSCPRMS {
+    // Variables for magnetic sensor.
+    int16vec      m_ho;
+    int16vec      HSUC_HO[2];
+    int32vec      m_ho32;
+    int16vec      m_hs;
+    int16vec      HFLUCV_HREF[3];
+    AKSC_HFLUCVAR m_hflucv;
+
+    // Variable for uncalibrated magnetic field.
+    int32vec      m_uncalib;
+    int32vec      m_bias;
+
+    // Variable for magnetic field.
+    int16vec      m_calib;
+
+    // Variables for DecompS3 .
+    int16         m_hn;     // Number of acquired data
+    int16vec      m_hdata[10];
+    int16vec      m_hvec;   // Averaged value(offset compensated)
+    int16vec      m_have;   // Averaged value
+    int16vec      m_asa;
+    uint8         m_pdc[27];
+    uint8         *m_pdcptr;
+
+    // Variables for HDOEaG.
+    AKSC_DOEAGVAR *m_doeag_var;
+
+    int16         m_rsv;
+    int16         m_hdt_ag;
+    int16         m_gdt_ag;
+    int16         m_mode;
+	int16			m_oedt;
+
+    // Variables for formation change
+    int16         m_form;
+    int16         m_cntSuspend;
+
+    // Variables for Direction9D.
+
+	uint8		m_device_stable;
+    int16         m_d9dRet;
+    int16         m_hnave;
+    int16vec      m_dvec;
+    int16         m_theta;
+    int16         m_delta;
+    int16         m_hr;
+    int16         m_hrhoriz;
+    int16         m_ar;
+    int16         m_phi180;
+    int16         m_phi90;
+    int16         m_eta180;
+    int16         m_eta90;
+    I16MATRIX     m_mat;
+    I16QUAT       m_quat;
+
+	
+    // Variables for acceleration sensor.
+    int16vec      m_AO;
+    int16vec      m_avec;
+
+    // Variables for gyroscope sensor.
+    int16vec      m_GO;
+    int16vec      m_gvec;
+    int16vec      m_gdata[3];
+
+    I16MATRIX     m_hlayout;
+    I16MATRIX     m_alayout;
+    I16MATRIX     m_glayout;
+
+    // Variables for measurement interval
+    int16         m_hdt;
+    int16         m_adt;
+    int16         m_gdt;
+
+    // Ceritication
+    uint8         m_licenser[4 + 1]; //end with '\0'
+    uint8         m_licensee[4 + 1]; //end with '\0'
+    int16         m_key[4];
+
+    // base
+    int32vec      m_hbase;
+    int32vec      HSUC_HBASE[2];
+} AKSCPRMS;
+
+AKSCPRMS _prms;
+AKSCPRMS *prms = &_prms;
+
+void InitAKSCPRMS(AKSCPRMS *prms)
+{
+    // Set 0 to the AKSCPRMS structure.
+    //memset(prms, 0, sizeof(AKSCPRMS));
+}
+int main()
+{
+	InitAKSCPRMS(prms);
+printf("%d\n",prms->m_hn);
+}
+
+
+
+
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************
+***********************************************************************************************************************************************************

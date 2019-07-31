@@ -1,4 +1,12 @@
+应美盛半导体科技（上海）有限公司
+中国（上海）自由贸易试验区科苑路151号3楼A02室
+021-68639666
+913101155903620436
+工商银行上海市张江支行
+1001194909006877963
 
+上海市浦东新区张江高科技园区中科路699号惠生大厦B701
+201203
 
 旭化成电子科技（上海）有限公司
 上海市徐汇区淮海中路999号 上海环贸广场办公楼一期（即2幢2号）8层816室
@@ -213,6 +221,12 @@ git commit -m "charon add"
 git push origin charon
 
 
+git config --global user.email "dragon26100@hotmail.com"
+git config --global user.name "dragon2610"
+
+git config --global user.email "cchu@invensense.com"
+git config --global user.name "charon-invn"
+
 echo "# ccl" >> README.md
 git init
 git add README.md
@@ -223,6 +237,57 @@ git push -u origin master
 
 git remote add origin git@github.com:dragon2610/ccl.git
 git push -u origin master
+
+
+
+
+gitlab
+
+【Gitlab】GIT回滚master分支到指定tag版本 并提交远程仓库
+1 查看分支
+git branch
+
+2 切换到master分支
+git checkout master
+
+3 查看标签
+git tag
+v1.3.3
+v1.3.4
+v1.3.5
+
+4 查看某个标签的详情
+git show v1.3.5
+commit fb479960c0cec5549463ae123d70bdd72ccf6be7
+
+5 通过commit id回退
+git reset --hard fb479960c0cec5549463ae123d70bdd72ccf6be7
+
+6 显示所有提交过的版本信息
+git log
+
+7 查看所有分支的所有操作记录
+git reflog
+
+8 显示工作目录和暂存区的状态
+git status
+
+9 提交远程仓库
+git push origin master
+
+10 git报错，需要进入gitlab项目设置，protected branches里取消master的protected，设置
+
+11 再次push本地master分支
+git push origin master
+
+12 加入-f参数，强制提交，远程端将强制跟新到reset版本
+git push -f origin master
+
+13 版本回退完毕后，在gitlab项目设置，protected branches里设置回master的protected。
+
+
+
+
 
 
 
@@ -1205,9 +1270,13 @@ memset(a, 0, sizeof(int) * m * n);
 对所有二维以上的数组使用memset时，若此多维数组是通过多次调用malloc函数搭积木分配得到的，那么该数组的内存空间可能不连续。使用memset函数进行连续的统一赋值就毫无意义了。直接声明的多维数组如a[2][3]的内存空间显然是连续的，此时使用memset函数初始化就没有问题。
 
 
-18.推挽 开漏
+
+18.推挽(Push-Pull) 开漏(Open Drain)
 线路经过一个由P-MOS和N-MOS管组成的单元电路。而所谓推挽输出模式，则是根据其工作方式来命名的。在输出高电平时，P-MOS导通，低电平时，N-MOS管导通。两个管子轮流导通，一个负责灌电流，一个负责拉电流，使其负载能力和开关速度都比普通的方式有很大的提高。
 在开漏输出模式时，如果我们控制输出为0，低电平，则使N-MOS管导通，使输出接地，若控制输出为1(无法直接输出高电平)，则既不输出高电平，也不输出低电平，为高阻态。普通开漏输出一般应用在电平不匹配的场合，如需要输出5伏的高电平，就需要在外部接一个上拉电阻，电源为5伏，把GPIO设置为开漏模式，当输出高阻态时，由上拉电阻和电源向外输出 5 伏的电平。
+
+
+
 
 19.品质因子 Q
 品质因子或Q因子是物理及工程中的无量纲参数，是表示振子阻尼性质的物理量，也可表示振子的共振频率相对于带宽的大小， 高Q因子表示振子能量损失的速率较慢，振动可持续较长的时间，例如一个单摆在空气中运动，其Q因子较高，而在油中运动的单摆Q因子较低。高Q因子的振子一般其阻尼也较小。
@@ -3333,3 +3402,133 @@ call slpi_proc\ssc\tools\mini_dm\mini-dm.exe --comport com3 --verbose --enable_s
 78. tar
 tar -czvf L.tar.gz *
 tar -xzvf file.tar.gz
+
+
+
+
+
+
+
+
+
+79. Filter
+按滤波器所通过信号的频段分为低通、高通、带通和带阻滤波器四种。
+（1） 低通滤波器：
+它允许信号中的低频或直流分量通过，抑制高频分量或干扰和噪声；
+（2） 高通滤波器：
+它允许信号中的高频分量通过，抑制低频或直流分量；
+（3） 带通滤波器：
+它允许一定频段的信号通过，抑制低于或高于该频段的信号、干扰和噪声；
+（4） 带阻滤波器：
+它抑制一定频段内的信号，允许该频段以外的信号通过。
+
+矩形滤波器，英文全称为“Brick-Wall Filter”，是理想的低通滤波器的模型，它能使所有低于截止频率的信号无损通过，同时，所有高于截止频率的信号都应该被无限的衰减，从而在幅频特性曲线上呈现矩形，并因此而得名“矩形滤波器”。
+
+-3dB带宽指幅值等于最大值的(根号2)/2倍时对应的频带宽度
+
+
+
+
+
+
+80.ANSI UTF-8
+ANSI和ASCII区别
+ANSI码（American National Standards Institute）
+美国国家标准学会的标准码
+ASCII码(America Standard Code for Information Interchange）美国信息交换标准码
+是基于拉丁字母的一套电脑编码系统，主要用于显示现代英语和其他西欧语言。它是现今最通用的单字节编码系统，并等同于国际标准ISO/IEC 646。
+可以认为是不同的东西!
+ANSI码仅在前126个与ASCII码相同。
+在简体中文Windows操作系统中，ANSI 编码代表 GBK 编码；在英文Windows操作系统中，ANSI 编码代表 ASCII编码；在繁体中文Windows操作系统中，ANSI编码代表Big5；在日文Windows操作系统中，ANSI 编码代表 Shift_JIS 编码。
+
+Unicode和UTF-8区别
+Unicode is charset。
+UTF-8 is encoding。
+unicode是一个字符集，utf8是在这个字符集基础上的一种具体的编码方案为更好的存储和传输，其他还有 UTF-16，UTF-32 等。
+
+ASCII码跟Unicode没有本质的区别。只不过Unicode表示范围比ASCII大。ASCII可以表示127个英文字母，其中每个英文字母都有一个十进制编码，并且通过这个十进制编码转化成二进制数（编码）存入到内存当中（占1字节）。
+而在Unicode中，英文字母的编码与其在ASCII中没有不同。只是Unicode每个字符占2个字节，于是转化为二进制时就变成‘000000 ASCII’。
+同时Unicode支持中文字符以及其他字符的表示。这种非ASCII字符占用的内存更多一些。
+而UTF-8则是在Unicode的基础上进行的再编码。其中对于字母的编码与Unicode和ASCII一致。
+文本文档是用UTF-8编码保存的。这样可以最大限度的节省空间。但是当你对这个文本文档进行操作的时候，计算机是先把UTF-8转化为Unicode然后放到内存中，让用户进行操作，操作完成后在内存中还是Unicode模式。当你需要保存的时候在转化为UTF-8格式保存（节省空间）。
+--------------------- 
+
+
+
+
+
+
+
+
+81.Visual Studio
+msvc70	VC7.0	VS2002	Microsoft Visual Studio 2002
+msvc71	VC7.1	VS2003	Microsoft Visual Studio 2003
+msvc80	VC8.0	VS2005	Microsoft Visual Studio 2005
+msvc90	VC9.0	VS2008	Microsoft Visual Studio 2008
+		VC10.0	VS2010	Microsoft Visual Studio 2010
+		VC11.0	VS2012	Microsoft Visual Studio 2012
+		VC12.0	VS2013	Microsoft Visual Studio 2013
+		VC13.0	VS2014	Microsoft Visual Studio 2014
+		VC14.0	VS2015	Microsoft Visual Studio 2015
+		
+		
+
+
+		
+		
+82. 三视图
+投影规则
+主俯长对正、主左高平齐、俯左宽相等
+即：
+主视图和俯视图的长要相等
+主视图和左视图的高要相等
+左视图和俯视图的宽要相等。
+
+
+
+
+
+
+
+83.
+Estimated Time of Arrival（ETA）——预计到达时间
+Estimated Time of Departure（ETD）——预计开航时间
+ESTIMATED TIME OF CLOSING（ETC）——截关日
+
+Electronic Toll Collection（ETC）——电子不停车收费系统
+
+EUT,是“Equipment Under Test
+
+
+
+
+
+
+84.
+Automatic Speech Recognition,(ASR)
+TTS是Text To Speech
+自然语言理解（Natural Language Understanding，简称NLU）技术
+NLP是Natural Language Processing 的简称，意为自然语言处理
+
+
+
+
+
+85.SMA组件
+形状记忆合金(shape memory alloys,SMA)
+传统的OIS装置使用的驱动器有音圈马达(VCM)式OIS装置、形状记忆合金(SMA)式OIS装置、VCM-SMA式OIS装置、压电式OIS装置或步进马达式OIS装置。而其中，VCM-SMA式OIS装置因其驱动速度快、体积小、功耗低、效率高而成为新型的驱动装置。
+
+
+
+
+86. E-cig
+PG是英文丙二醇的缩写，通过环氧丙烷的水合作用制作。VG是英文蔬菜甘油的缩写。
+
+
+
+
+87. 全球导航卫星系统（GNSS）
+北斗卫星导航系统（BDS）和美国GPS、俄罗斯GLONASS、欧盟GALILEO
+
+
+
